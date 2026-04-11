@@ -13,7 +13,7 @@ const projectsCache: { data: CachedProject[] | null; building: Promise<CachedPro
   building: null,
 };
 
-const sessionsCache = new Map<string, { data: SessionInfo[]; timestamp: number }>();
+const sessionsCache = new Map<string, SessionInfo[]>();
 
 function deriveDisplayName(directory: string | null, encoded: string): string {
   if (directory) {
@@ -57,10 +57,10 @@ async function buildProjectsCache(): Promise<CachedProject[]> {
 
 export async function getCachedSessions(projectName: string): Promise<SessionInfo[]> {
   const cached = sessionsCache.get(projectName);
-  if (cached && Date.now() - cached.timestamp < 60000) return cached.data;
+  if (cached) return cached;
 
   const { sessions } = await getSessions(projectName, 200, 0);
-  sessionsCache.set(projectName, { data: sessions, timestamp: Date.now() });
+  sessionsCache.set(projectName, sessions);
   return sessions;
 }
 

@@ -9,21 +9,23 @@ export function useClaudeUpdates() {
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/updates`);
+    const ws = new WebSocket(
+      `${protocol}//${window.location.host}/ws/updates`
+    );
 
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
         if (msg.type === "project-updated") {
-          queryClient.invalidateQueries({
+          queryClient.refetchQueries({
             queryKey: claudeKeys.sessions(msg.projectName),
           });
-          queryClient.invalidateQueries({
+          queryClient.refetchQueries({
             queryKey: claudeKeys.projects(),
           });
         }
         if (msg.type === "projects-changed") {
-          queryClient.invalidateQueries({
+          queryClient.refetchQueries({
             queryKey: claudeKeys.projects(),
           });
         }
