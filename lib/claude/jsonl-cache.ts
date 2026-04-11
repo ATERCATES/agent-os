@@ -1,19 +1,17 @@
-import { extractProjectDirectory, getSessions, getClaudeProjectNames, type SessionInfo } from "./jsonl-reader";
+import {
+  extractProjectDirectory,
+  getSessions,
+  getClaudeProjectNames,
+  type SessionInfo,
+} from "./jsonl-reader";
 
-interface CachedProject {
+export interface CachedProject {
   name: string;
   directory: string | null;
   displayName: string;
   sessionCount: number;
   lastActivity: string | null;
 }
-
-const projectsCache: { data: CachedProject[] | null; building: Promise<CachedProject[]> | null } = {
-  data: null,
-  building: null,
-};
-
-const sessionsCache = new Map<string, SessionInfo[]>();
 
 function deriveDisplayName(directory: string | null, encoded: string): string {
   if (directory) {
@@ -25,18 +23,10 @@ function deriveDisplayName(directory: string | null, encoded: string): string {
   return parts[parts.length - 1] || decoded;
 }
 
-export async function getCachedProjects(): Promise<CachedProject[]> {
-  if (projectsCache.data) return projectsCache.data;
-  if (projectsCache.building) return projectsCache.building;
+let projectsData: CachedProject[] | null = null;
+let projectsBuilding: Promise<CachedProject[]> | null = null;
 
-  projectsCache.building = buildProjectsCache();
-  const result = await projectsCache.building;
-  projectsCache.data = result;
-  projectsCache.building = null;
-  return result;
-}
-
-async function buildProjectsCache(): Promise<CachedProject[]> {
+async function buildProjects(): Promise<CachedProject[]> {
   const projectNames = getClaudeProjectNames();
   return Promise.all(
     projectNames.map(async (name) => {
@@ -55,21 +45,27 @@ async function buildProjectsCache(): Promise<CachedProject[]> {
   );
 }
 
-export async function getCachedSessions(projectName: string): Promise<SessionInfo[]> {
-  const cached = sessionsCache.get(projectName);
-  if (cached) return cached;
+export async function getCachedProjects(): Promise<CachedProject[]> {
+  if (projectsData) return projectsData;
+  if (projectsBuilding) return projectsBuilding;
 
+  projectsBuilding = buildProjects();
+  projectsData = await projectsBuilding;
+  projectsBuilding = null;
+  return projectsData;
+}
+
+export async function getCachedSessions(
+  projectName: string
+): Promise<SessionInfo[]> {
   const { sessions } = await getSessions(projectName, 200, 0);
-  sessionsCache.set(projectName, sessions);
   return sessions;
 }
 
-export function invalidateProject(projectName: string): void {
-  sessionsCache.delete(projectName);
-  projectsCache.data = null;
+export function invalidateProject(_projectName: string): void {
+  projectsData = null;
 }
 
 export function invalidateAll(): void {
-  sessionsCache.clear();
-  projectsCache.data = null;
+  projectsData = null;
 }
