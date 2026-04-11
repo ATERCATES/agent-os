@@ -33,6 +33,7 @@ export function MobileView({
   handleCreateDevServer,
   startDevServerProject,
   setStartDevServerProjectId,
+  resumeClaudeSession,
   renderPane,
 }: ViewProps) {
   return (
@@ -59,6 +60,7 @@ export function MobileView({
               onOpenTerminal={handleOpenTerminal}
               onStartDevServer={handleStartDevServer}
               onCreateDevServer={handleCreateDevServer}
+              onResumeClaudeSession={resumeClaudeSession}
             />
           </div>
 

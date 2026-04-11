@@ -293,6 +293,36 @@ function HomeContent() {
     [addTab, focusedPaneId, buildSessionCommand, runSessionInTerminal]
   );
 
+  const resumeClaudeSession = useCallback(
+    (claudeSessionId: string, cwd: string) => {
+      const terminalInfo = getTerminalWithFallback();
+      if (!terminalInfo) return;
+
+      const { terminal, paneId } = terminalInfo;
+      const activeTab = getActiveTab(paneId);
+      const isInTmux = !!activeTab?.attachedTmux;
+
+      if (isInTmux) {
+        terminal.sendInput("\x02d");
+      }
+
+      setTimeout(
+        () => {
+          terminal.sendInput("\x03");
+          setTimeout(() => {
+            const parent = cwd.split("/").slice(0, -1).join("/") || "~";
+            terminal.sendCommand(
+              `cd "${cwd}" 2>/dev/null || cd "${parent}" 2>/dev/null || cd ~; claude --resume ${claudeSessionId}`
+            );
+            terminal.focus();
+          }, 50);
+        },
+        isInTmux ? 100 : 0
+      );
+    },
+    [getTerminalWithFallback, getActiveTab]
+  );
+
   // Notification click handler
   const handleNotificationClick = useCallback(
     (sessionId: string) => {
@@ -485,6 +515,7 @@ function HomeContent() {
     handleCreateDevServer: createDevServer,
     startDevServerProject,
     setStartDevServerProjectId,
+    resumeClaudeSession,
     renderPane,
   };
 

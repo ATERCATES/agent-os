@@ -55,6 +55,7 @@ export function DesktopView({
   handleCreateDevServer,
   startDevServerProject,
   setStartDevServerProjectId,
+  resumeClaudeSession,
   renderPane,
 }: ViewProps) {
   return (
@@ -81,6 +82,7 @@ export function DesktopView({
               onOpenTerminal={handleOpenTerminal}
               onStartDevServer={handleStartDevServer}
               onCreateDevServer={handleCreateDevServer}
+              onResumeClaudeSession={resumeClaudeSession}
             />
           </div>
 

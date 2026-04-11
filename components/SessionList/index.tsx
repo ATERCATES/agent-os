@@ -41,6 +41,7 @@ export function SessionList({
   onOpenTerminal,
   onStartDevServer,
   onCreateDevServer,
+  onResumeClaudeSession,
 }: SessionListProps) {
   const { isMobile } = useViewport();
 
@@ -275,31 +276,8 @@ export function SessionList({
             <>
               <div className="border-border my-2 border-t" />
               <ClaudeProjectsSection
-                onSelectSession={async (claudeSessionId, directory) => {
-                  try {
-                    const existing = sessions.find(
-                      (s) => s.claude_session_id === claudeSessionId
-                    );
-                    if (existing) {
-                      onSelect(existing.id);
-                      return;
-                    }
-                    const res = await fetch("/api/sessions", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        name: claudeSessionId.slice(0, 8),
-                        workingDirectory: directory,
-                        agentType: "claude",
-                        claudeSessionId,
-                      }),
-                    });
-                    if (!res.ok) return;
-                    const { session } = await res.json();
-                    if (session?.id) onSelect(session.id);
-                  } catch {
-                    // ignore
-                  }
+                onSelectSession={(claudeSessionId, cwd) => {
+                  onResumeClaudeSession?.(claudeSessionId, cwd);
                 }}
               />
             </>

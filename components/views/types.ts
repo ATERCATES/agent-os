@@ -61,6 +61,9 @@ export interface ViewProps {
   startDevServerProject: ProjectWithDevServers | null;
   setStartDevServerProjectId: (id: string | null) => void;
 
+  // Claude session resume
+  resumeClaudeSession: (claudeSessionId: string, cwd: string) => void;
+
   // Pane
   renderPane: (paneId: string) => React.ReactNode;
 }
