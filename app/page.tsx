@@ -153,11 +153,6 @@ function HomeContent() {
       const sessionName = session.tmux_name || `${provider.id}-${session.id}`;
       const cwd = session.working_directory?.replace("~", "$HOME") || "$HOME";
 
-      // Shell sessions just open a terminal - no agent command
-      if (provider.id === "shell") {
-        return { sessionName, cwd, command: "" };
-      }
-
       // TODO: Add explicit "Enable Orchestration" toggle that creates .mcp.json
       // for conductor sessions. Removed auto-creation because it pollutes projects
       // with .mcp.json files that aren't in their .gitignore.
