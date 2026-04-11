@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { FolderPicker } from "@/components/FolderPicker";
 import { useHomePath } from "@/hooks/useHomePath";
 
@@ -17,8 +16,6 @@ import { useNewSessionForm } from "./hooks/useNewSessionForm";
 import { AgentSelector } from "./AgentSelector";
 import { WorkingDirectoryInput } from "./WorkingDirectoryInput";
 import { WorktreeSection } from "./WorktreeSection";
-import { ProjectSelector } from "./ProjectSelector";
-import { AdvancedSettings } from "./AdvancedSettings";
 import { CreatingOverlay } from "./CreatingOverlay";
 import type { NewSessionDialogProps } from "./NewSessionDialog.types";
 
@@ -55,7 +52,6 @@ export function NewSessionDialog({
             }
           }}
         >
-          {/* Loading overlay */}
           {form.isLoading && (
             <CreatingOverlay
               isWorktree={form.useWorktree}
@@ -105,51 +101,6 @@ export function NewSessionDialog({
                 onBaseBranchChange={form.setBaseBranch}
               />
             )}
-
-            <ProjectSelector
-              projects={projects}
-              projectId={form.projectId}
-              onProjectChange={form.handleProjectChange}
-              workingDirectory={form.workingDirectory}
-              agentType={form.agentType}
-              showNewProject={form.showNewProject}
-              onShowNewProjectChange={form.setShowNewProject}
-              newProjectName={form.newProjectName}
-              onNewProjectNameChange={form.setNewProjectName}
-              creatingProject={form.creatingProject}
-              onCreateProject={form.handleCreateProject}
-              canCreateProject={!!onCreateProject}
-            />
-
-            {/* Initial Prompt */}
-            <div className="space-y-2">
-              <label htmlFor="initialPrompt" className="text-sm font-medium">
-                Initial Prompt{" "}
-                <span className="text-muted-foreground font-normal">
-                  (optional)
-                </span>
-              </label>
-              <Textarea
-                id="initialPrompt"
-                value={form.initialPrompt}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  form.setInitialPrompt(e.target.value)
-                }
-                placeholder="Enter a prompt to send when the session starts..."
-                className="min-h-[80px] resize-none text-sm"
-                rows={3}
-              />
-            </div>
-
-            <AdvancedSettings
-              open={form.advancedOpen}
-              onOpenChange={form.setAdvancedOpen}
-              agentType={form.agentType}
-              useTmux={form.useTmux}
-              onUseTmuxChange={form.handleUseTmuxChange}
-              skipPermissions={form.skipPermissions}
-              onSkipPermissionsChange={form.handleSkipPermissionsChange}
-            />
 
             {form.error && <p className="text-sm text-red-500">{form.error}</p>}
 
