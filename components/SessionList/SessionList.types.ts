@@ -15,6 +15,7 @@ export interface SessionListProps {
   onOpenTerminal?: (projectId: string) => void;
   onStartDevServer?: (projectId: string) => void;
   onResumeClaudeSession?: (claudeSessionId: string, cwd: string) => void;
+  onNewSession?: () => void;
   onCreateDevServer?: (opts: {
     projectId: string;
     type: "node" | "docker";

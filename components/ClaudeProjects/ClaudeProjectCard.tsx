@@ -7,8 +7,10 @@ import {
   ChevronDown,
   FolderOpen,
   MoreHorizontal,
+  Plus,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,17 +37,18 @@ interface ClaudeProjectCardProps {
   project: ClaudeProject;
   showHidden: boolean;
   onSelectSession?: (sessionId: string, directory: string) => void;
+  onNewSession?: () => void;
 }
 
 export function ClaudeProjectCard({
   project,
   showHidden,
   onSelectSession,
+  onNewSession,
 }: ClaudeProjectCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const { data: sessionsData } = useClaudeSessionsQuery(
-    expanded ? project.name : null
-  );
+  const { data: sessionsData, isPending: isSessionsPending } =
+    useClaudeSessionsQuery(expanded ? project.name : null);
   const hideItem = useHideItem();
   const unhideItem = useUnhideItem();
 
@@ -98,6 +101,19 @@ export function ClaudeProjectCard({
       <span className="text-muted-foreground flex-shrink-0 text-[10px]">
         {project.sessionCount}
       </span>
+      {onNewSession && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="h-7 w-7 flex-shrink-0 opacity-100 md:h-6 md:w-6 md:opacity-0 md:group-hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNewSession();
+          }}
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </Button>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <Button
@@ -134,7 +150,12 @@ export function ClaudeProjectCard({
 
       {expanded && (
         <div className="border-border/30 ml-3 space-y-px border-l pl-1.5">
-          {filteredSessions.length === 0 ? (
+          {isSessionsPending ? (
+            <div className="flex items-center gap-2 px-2 py-2">
+              <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
+              <span className="text-muted-foreground text-xs">Loading sessions...</span>
+            </div>
+          ) : filteredSessions.length === 0 ? (
             <p className="text-muted-foreground px-2 py-2 text-xs">
               No sessions
             </p>

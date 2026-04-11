@@ -62,7 +62,7 @@ export function DesktopView({
     <div className="bg-background flex h-screen overflow-hidden">
       {/* Desktop Sidebar */}
       <div
-        className={` ${sidebarOpen ? "w-60" : "w-0"} bg-sidebar-background flex-shrink-0 overflow-hidden shadow-xl shadow-black/10 transition-all duration-200 dark:shadow-black/30`}
+        className={` ${sidebarOpen ? "w-72" : "w-0"} bg-sidebar-background flex-shrink-0 overflow-hidden shadow-xl shadow-black/10 transition-all duration-200 dark:shadow-black/30`}
       >
         <div className="flex h-full flex-col">
           {/* Session list */}
@@ -83,6 +83,7 @@ export function DesktopView({
               onStartDevServer={handleStartDevServer}
               onCreateDevServer={handleCreateDevServer}
               onResumeClaudeSession={resumeClaudeSession}
+              onNewSession={() => setShowNewSessionDialog(true)}
             />
           </div>
 

@@ -61,6 +61,7 @@ export function MobileView({
               onStartDevServer={handleStartDevServer}
               onCreateDevServer={handleCreateDevServer}
               onResumeClaudeSession={resumeClaudeSession}
+              onNewSession={() => setShowNewSessionDialog(true)}
             />
           </div>
 

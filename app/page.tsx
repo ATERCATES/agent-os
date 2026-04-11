@@ -40,7 +40,7 @@ import { getPendingPrompt, clearPendingPrompt } from "@/stores/initialPrompt";
 
 function HomeContent() {
   // UI State
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
   const [newSessionProjectId, setNewSessionProjectId] = useState<string | null>(
     null
