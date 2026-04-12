@@ -309,9 +309,9 @@ function HomeContent() {
 
       const tmuxName = `claude-${claudeSessionId}`;
       const tmuxCmd = [
-        `tmux attach -t ${tmuxName} 2>/dev/null`,
+        `tmux kill-session -t ${tmuxName} 2>/dev/null;`,
         `tmux new -s ${tmuxName} -c "${cwd}" "claude --resume ${claudeSessionId}"`,
-      ].join(" || ");
+      ].join(" ");
 
       if (isInTmux) {
         terminal.sendInput("\x02d");
@@ -341,15 +341,15 @@ function HomeContent() {
 
   const newClaudeSession = useCallback(
     (cwd?: string, projectName?: string) => {
+      const name = prompt("Session name (optional):")?.trim() || "New session";
       const terminalInfo = getTerminalWithFallback();
       if (!terminalInfo) return;
 
       const { terminal, paneId } = terminalInfo;
       const activeTab = getActiveTab(paneId);
       const isInTmux = !!activeTab?.attachedTmux;
-      const sessionId =
-        Math.random().toString(36).slice(2) + Date.now().toString(36);
-      const tmuxName = `claude-${sessionId}`;
+      const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      const tmuxName = `claude-new-${id}`;
       const dir = cwd || "~";
       const tmuxCmd = `tmux new -s ${tmuxName} -c "${dir}" "claude"`;
 
@@ -362,14 +362,7 @@ function HomeContent() {
           terminal.sendInput("\x03");
           setTimeout(() => {
             terminal.sendCommand(tmuxCmd);
-            attachSession(
-              paneId,
-              sessionId,
-              tmuxName,
-              "New session",
-              projectName,
-              dir
-            );
+            attachSession(paneId, id, tmuxName, name, projectName, dir);
             terminal.focus();
           }, 50);
         },
