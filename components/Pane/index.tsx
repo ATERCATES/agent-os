@@ -107,7 +107,14 @@ export const Pane = memo(function Pane({
     : null;
   const isFocused = focusedPaneId === paneId;
   const session = activeTab
-    ? sessions.find((s) => s.id === activeTab.sessionId)
+    ? (sessions.find((s) => s.id === activeTab.sessionId) ??
+      (activeTab.sessionId
+        ? ({
+            id: activeTab.sessionId,
+            name: activeTab.sessionName || activeTab.sessionId.slice(0, 8),
+            working_directory: "~",
+          } as Session)
+        : null))
     : null;
 
   // File editor state - lifted here so it persists across view switches

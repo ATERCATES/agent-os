@@ -6,7 +6,11 @@ import { useClaudeProjectsQuery, useClaudeUpdates } from "@/data/claude";
 import { ClaudeProjectCard } from "./ClaudeProjectCard";
 
 interface ClaudeProjectsSectionProps {
-  onSelectSession?: (sessionId: string, directory: string) => void;
+  onSelectSession?: (
+    sessionId: string,
+    directory: string,
+    summary: string
+  ) => void;
   onNewSession?: () => void;
 }
 
@@ -16,7 +20,10 @@ function ProjectsSkeleton() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex items-center gap-2 rounded-md px-2 py-1.5">
           <div className="bg-muted h-4 w-4 animate-pulse rounded" />
-          <div className="bg-muted h-3.5 animate-pulse rounded" style={{ width: `${60 + Math.random() * 60}px` }} />
+          <div
+            className="bg-muted h-3.5 animate-pulse rounded"
+            style={{ width: `${60 + Math.random() * 60}px` }}
+          />
           <div className="flex-1" />
           <div className="bg-muted h-3 w-4 animate-pulse rounded" />
         </div>

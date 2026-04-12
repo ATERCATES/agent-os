@@ -14,7 +14,11 @@ export interface SessionListProps {
   onNewSessionInProject?: (projectId: string) => void;
   onOpenTerminal?: (projectId: string) => void;
   onStartDevServer?: (projectId: string) => void;
-  onResumeClaudeSession?: (claudeSessionId: string, cwd: string) => void;
+  onResumeClaudeSession?: (
+    claudeSessionId: string,
+    cwd: string,
+    summary?: string
+  ) => void;
   onNewSession?: () => void;
   onCreateDevServer?: (opts: {
     projectId: string;

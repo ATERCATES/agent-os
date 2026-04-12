@@ -36,7 +36,11 @@ import type { ClaudeProject } from "@/data/claude";
 interface ClaudeProjectCardProps {
   project: ClaudeProject;
   showHidden: boolean;
-  onSelectSession?: (sessionId: string, directory: string) => void;
+  onSelectSession?: (
+    sessionId: string,
+    directory: string,
+    summary: string
+  ) => void;
   onNewSession?: () => void;
 }
 
@@ -153,7 +157,9 @@ export function ClaudeProjectCard({
           {isSessionsPending ? (
             <div className="flex items-center gap-2 px-2 py-2">
               <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
-              <span className="text-muted-foreground text-xs">Loading sessions...</span>
+              <span className="text-muted-foreground text-xs">
+                Loading sessions...
+              </span>
             </div>
           ) : filteredSessions.length === 0 ? (
             <p className="text-muted-foreground px-2 py-2 text-xs">

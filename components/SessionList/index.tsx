@@ -139,8 +139,8 @@ export function SessionList({
 
           {!isInitialLoading && !hasError && (
             <ClaudeProjectsSection
-              onSelectSession={(claudeSessionId, cwd) => {
-                onResumeClaudeSession?.(claudeSessionId, cwd);
+              onSelectSession={(claudeSessionId, cwd, summary) => {
+                onResumeClaudeSession?.(claudeSessionId, cwd, summary);
               }}
               onNewSession={onNewSession}
             />

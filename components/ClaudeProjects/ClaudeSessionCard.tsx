@@ -15,7 +15,7 @@ interface ClaudeSessionCardProps {
   session: ClaudeSession;
   onHide: () => void;
   onUnhide: () => void;
-  onSelect?: (sessionId: string, directory: string) => void;
+  onSelect?: (sessionId: string, directory: string, summary: string) => void;
 }
 
 function getTimeAgo(dateStr: string): string {
@@ -44,7 +44,7 @@ export function ClaudeSessionCard({
 }: ClaudeSessionCardProps) {
   const handleClick = () => {
     if (onSelect && session.cwd) {
-      onSelect(session.sessionId, session.cwd);
+      onSelect(session.sessionId, session.cwd, session.summary);
     }
   };
 

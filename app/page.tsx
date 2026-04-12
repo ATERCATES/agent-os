@@ -294,7 +294,7 @@ function HomeContent() {
   );
 
   const resumeClaudeSession = useCallback(
-    (claudeSessionId: string, cwd: string) => {
+    (claudeSessionId: string, cwd: string, sessionName?: string) => {
       const terminalInfo = getTerminalWithFallback();
       if (!terminalInfo) return;
 
@@ -317,7 +317,7 @@ function HomeContent() {
           terminal.sendInput("\x03");
           setTimeout(() => {
             terminal.sendCommand(tmuxCmd);
-            attachSession(paneId, claudeSessionId, tmuxName);
+            attachSession(paneId, claudeSessionId, tmuxName, sessionName);
             terminal.focus();
           }, 50);
         },
