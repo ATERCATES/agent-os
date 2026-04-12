@@ -133,7 +133,7 @@ export function MobileTabBar({
 
   return (
     <div
-      className="bg-muted flex items-center gap-2 px-2 py-1.5"
+      className="bg-muted flex items-center gap-2 px-2 py-1.5 pt-[max(0.375rem,env(safe-area-inset-top))]"
       onClick={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
       onTouchEnd={(e) => e.stopPropagation()}

@@ -112,11 +112,10 @@ export function SwipeSidebar({ isOpen, onClose, children }: SwipeSidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
+        {/* Safe area spacer top */}
+        <div className="h-[env(safe-area-inset-top)]" />
         {/* Content */}
         <div className="flex-1 overflow-y-auto">{children}</div>
-
-        {/* Safe area spacer */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
       </aside>
     </>
   );

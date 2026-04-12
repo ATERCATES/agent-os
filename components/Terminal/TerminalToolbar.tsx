@@ -380,7 +380,7 @@ export function TerminalToolbar({
         onInsert={sendText}
       />
       <div
-        className="bg-background/95 border-border scrollbar-none flex items-center gap-1 overflow-x-auto border-t px-2 py-1.5 backdrop-blur"
+        className="bg-background/95 border-border scrollbar-none flex items-center gap-1 overflow-x-auto border-t px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur"
         onTouchEnd={(e) => e.stopPropagation()}
       >
         {/* Mic button */}

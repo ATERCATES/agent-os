@@ -7,7 +7,7 @@ import {
 
 export function SidebarFooter() {
   return (
-    <div className="mt-auto px-3 pt-2 pb-3">
+    <div className="mt-auto px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="flex items-center justify-between">
         <span className="text-muted-foreground text-xs">Theme</span>
         <ThemeToggle />
