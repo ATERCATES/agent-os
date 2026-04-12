@@ -42,11 +42,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const hiddenItems = await queries.getHiddenItems("session");
     const hiddenSet = new Set(hiddenItems.map((h) => h.item_id));
 
-    const enriched = allSessions.map((s) => ({
-      ...s,
-      cwd: resolveValidCwd(s.cwd, projectDir),
-      hidden: hiddenSet.has(s.sessionId),
-    }));
+    const enriched = allSessions
+      .filter((s) => s.messageCount > 2 || s.cwd)
+      .map((s) => ({
+        ...s,
+        cwd: resolveValidCwd(s.cwd, projectDir),
+        hidden: hiddenSet.has(s.sessionId),
+      }));
 
     const filtered = includeHidden
       ? enriched

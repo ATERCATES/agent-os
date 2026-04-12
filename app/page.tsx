@@ -311,7 +311,7 @@ function HomeContent() {
       const tmuxName = `claude-${claudeSessionId}`;
       const tmuxCmd = [
         `tmux kill-session -t ${tmuxName} 2>/dev/null;`,
-        `tmux new -s ${tmuxName} -c "${cwd}" "claude --resume ${claudeSessionId}"`,
+        `tmux new -s ${tmuxName} -c "${cwd}" "claude --resume ${claudeSessionId} || claude --continue"`,
       ].join(" ");
 
       if (isInTmux) {
