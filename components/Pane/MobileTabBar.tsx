@@ -130,7 +130,7 @@ export function MobileTabBar({
           {sessionList.length > 0 && (
             <DropdownMenuContent
               align="center"
-              className="max-h-[300px] min-w-[200px] overflow-y-auto"
+              className="max-h-[280px] w-[240px] overflow-y-auto p-1"
             >
               {sessionList.map((s) => {
                 const isActive = s.sessionId === session?.id;
@@ -148,19 +148,19 @@ export function MobileTabBar({
                       }
                     }}
                     className={cn(
-                      "flex items-center gap-2",
+                      "gap-2 rounded px-2 py-1.5",
                       isActive && "bg-accent"
                     )}
                   >
                     <Circle
                       className={cn(
-                        "h-2 w-2",
+                        "h-1.5 w-1.5 shrink-0",
                         isActive
                           ? "fill-primary text-primary"
-                          : "text-muted-foreground"
+                          : "text-muted-foreground/50"
                       )}
                     />
-                    <span className="flex-1 truncate text-xs">{s.summary}</span>
+                    <span className="truncate text-xs">{s.summary}</span>
                   </DropdownMenuItem>
                 );
               })}
