@@ -98,16 +98,10 @@ export function setupTouchScroll(config: TouchScrollConfig): () => void {
 
       if (Math.abs(deltaY) < 1) return;
 
-      // Convert touch movement to synthetic WheelEvents on the xterm element.
-      // This feeds into xterm's full event pipeline:
-      //   - Normal buffer: SmoothScrollableElement handles wheel → viewport scrolls
-      //   - Alternate buffer with mouse protocol (tmux mouse on): coreMouseService
-      //     converts wheel to mouse escape sequences sent through the PTY properly
       scrollAccumulator += deltaY;
       const step = 20;
 
       while (Math.abs(scrollAccumulator) >= step) {
-        // Negate: finger DOWN (positive deltaY) → scroll UP (negative wheel deltaY)
         const wheelDelta = scrollAccumulator > 0 ? -100 : 100;
         const syntheticWheel = new WheelEvent("wheel", {
           deltaY: wheelDelta,

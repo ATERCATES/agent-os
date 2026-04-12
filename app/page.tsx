@@ -203,7 +203,7 @@ function HomeContent() {
         ? `tmux new -s ${sessionName} -c "${cwd}" "${command}"`
         : `tmux new -s ${sessionName} -c "${cwd}"`;
       terminal.sendCommand(
-        `tmux set -g mouse on 2>/dev/null; tmux attach -t ${sessionName} 2>/dev/null || ${tmuxNew}`
+        `tmux set -g mouse off 2>/dev/null; tmux attach -t ${sessionName} 2>/dev/null || ${tmuxNew}`
       );
       attachSession(paneId, session.id, sessionName);
       terminal.focus();
