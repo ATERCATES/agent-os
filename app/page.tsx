@@ -294,7 +294,12 @@ function HomeContent() {
   );
 
   const resumeClaudeSession = useCallback(
-    (claudeSessionId: string, cwd: string) => {
+    (
+      claudeSessionId: string,
+      cwd: string,
+      sessionName?: string,
+      projectName?: string
+    ) => {
       const terminalInfo = getTerminalWithFallback();
       if (!terminalInfo) return;
 
@@ -317,7 +322,14 @@ function HomeContent() {
           terminal.sendInput("\x03");
           setTimeout(() => {
             terminal.sendCommand(tmuxCmd);
-            attachSession(paneId, claudeSessionId, tmuxName);
+            attachSession(
+              paneId,
+              claudeSessionId,
+              tmuxName,
+              sessionName,
+              projectName,
+              cwd
+            );
             terminal.focus();
           }, 50);
         },
@@ -399,9 +411,17 @@ function HomeContent() {
         onRegisterTerminal={registerTerminalRef}
         onMenuClick={isMobile ? () => setSidebarOpen(true) : undefined}
         onSelectSession={handleSelectSession}
+        onResumeClaudeSession={resumeClaudeSession}
       />
     ),
-    [sessions, projects, registerTerminalRef, isMobile, handleSelectSession]
+    [
+      sessions,
+      projects,
+      registerTerminalRef,
+      isMobile,
+      handleSelectSession,
+      resumeClaudeSession,
+    ]
   );
 
   // New session in project handler

@@ -57,6 +57,12 @@ interface PaneProps {
   ) => void;
   onMenuClick?: () => void;
   onSelectSession?: (sessionId: string) => void;
+  onResumeClaudeSession?: (
+    sessionId: string,
+    cwd: string,
+    summary: string,
+    projectName: string
+  ) => void;
 }
 
 type ViewMode = "terminal" | "files" | "git" | "workers";
@@ -68,6 +74,7 @@ export const Pane = memo(function Pane({
   onRegisterTerminal,
   onMenuClick,
   onSelectSession,
+  onResumeClaudeSession,
 }: PaneProps) {
   const { isMobile } = useViewport();
   const {
@@ -107,7 +114,14 @@ export const Pane = memo(function Pane({
     : null;
   const isFocused = focusedPaneId === paneId;
   const session = activeTab
-    ? sessions.find((s) => s.id === activeTab.sessionId)
+    ? (sessions.find((s) => s.id === activeTab.sessionId) ??
+      (activeTab.sessionId
+        ? ({
+            id: activeTab.sessionId,
+            name: activeTab.sessionName || activeTab.sessionId.slice(0, 8),
+            working_directory: activeTab.workingDirectory || "~",
+          } as Session)
+        : null))
     : null;
 
   // File editor state - lifted here so it persists across view switches
@@ -276,14 +290,13 @@ export const Pane = memo(function Pane({
       {isMobile ? (
         <MobileTabBar
           session={session}
-          sessions={sessions}
-          projects={projects}
+          claudeProjectName={activeTab?.claudeProjectName ?? null}
           viewMode={viewMode}
           isConductor={isConductor}
           workerCount={workerCount}
           onMenuClick={onMenuClick}
           onViewModeChange={setViewMode}
-          onSelectSession={onSelectSession}
+          onResumeClaudeSession={onResumeClaudeSession}
         />
       ) : (
         <DesktopTabBar
