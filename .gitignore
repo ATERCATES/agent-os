@@ -60,3 +60,7 @@ CLAUDE.md
 master.md
 progress.md
 .git-evening
+
+# Test screenshots and Playwright artifacts
+*.png
+.playwright-mcp/
