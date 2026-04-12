@@ -51,12 +51,6 @@ export function createTerminal(
   term.loadAddon(new CanvasAddon());
   fitAddon.fit();
 
-  // Prevent xterm from converting wheel events to arrow keys in alternate buffer
-  // (used by Claude Code, vim, etc.). Return false = xterm won't process the event.
-  term.attachCustomWheelEventHandler((ev: WheelEvent) => {
-    return term.buffer.active.type !== "alternate";
-  });
-
   // Helper to copy text to clipboard with fallback
   const copyToClipboard = (text: string) => {
     if (navigator.clipboard?.writeText) {
