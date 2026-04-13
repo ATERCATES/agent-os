@@ -49,7 +49,12 @@ export function MobileView({
               sessionStatuses={sessionStatuses}
               onSelect={(id) => {
                 const session = sessions.find((s) => s.id === id);
-                if (session) attachToSession(session);
+                if (session) {
+                  attachToSession(session);
+                } else {
+                  const status = sessionStatuses[id];
+                  resumeClaudeSession(id, status?.cwd || "~");
+                }
                 setSidebarOpen(false);
               }}
               onOpenInTab={(id) => {

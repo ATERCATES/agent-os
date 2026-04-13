@@ -48,7 +48,6 @@ export function DesktopView({
   updateSettings,
   requestPermission,
   attachToSession,
-  attachToActiveTmux,
   openSessionInNewTab,
   handleNewSessionInProject,
   handleOpenTerminal,
@@ -62,18 +61,14 @@ export function DesktopView({
   resumeClaudeSession,
   renderPane,
 }: ViewProps) {
-  // Select a session by ID — handles both DB sessions and tmux-only sessions
   const selectSessionById = (id: string) => {
     const session = sessions.find((s) => s.id === id);
     if (session) {
       attachToSession(session);
       return;
     }
-    // Not in DB — attach directly to the running tmux session
     const status = sessionStatuses[id];
-    if (status?.sessionName) {
-      attachToActiveTmux(id, status.sessionName);
-    }
+    resumeClaudeSession(id, status?.cwd || "~");
   };
 
   return (

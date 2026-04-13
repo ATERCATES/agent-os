@@ -29,8 +29,11 @@ const TICK_INTERVAL_MS = 3000;
 const SESSION_NAME_CACHE_TTL = 10_000;
 const UUID_PATTERN = getManagedSessionPattern();
 
-// Cache for session display names (summary from SDK)
-const sessionNameCache = new Map<string, { name: string; cachedAt: number }>();
+// Cache for session metadata (name + cwd from SDK)
+const sessionMetaCache = new Map<
+  string,
+  { name: string; cwd: string | null; cachedAt: number }
+>();
 
 // --- Types ---
 
@@ -45,6 +48,7 @@ interface StateFile {
 
 export interface SessionStatusSnapshot {
   sessionName: string;
+  cwd: string | null;
   status: SessionStatus;
   lastLine: string;
   waitingContext?: string;
@@ -103,28 +107,35 @@ async function listTmuxSessions(): Promise<Map<string, string>> {
   }
 }
 
-// --- Session display name resolution ---
+// --- Session metadata resolution ---
 
-async function resolveSessionDisplayName(sessionId: string): Promise<string> {
-  const cached = sessionNameCache.get(sessionId);
+async function resolveSessionMeta(
+  sessionId: string
+): Promise<{ name: string; cwd: string | null }> {
+  const cached = sessionMetaCache.get(sessionId);
   if (cached && Date.now() - cached.cachedAt < SESSION_NAME_CACHE_TTL) {
-    return cached.name;
+    return { name: cached.name, cwd: cached.cwd };
   }
 
   try {
     const info = await getSessionInfo(sessionId);
     if (info) {
       const name = info.customTitle || info.summary || sessionId.slice(0, 8);
-      sessionNameCache.set(sessionId, { name, cachedAt: Date.now() });
-      return name;
+      const cwd = info.cwd || null;
+      sessionMetaCache.set(sessionId, { name, cwd, cachedAt: Date.now() });
+      return { name, cwd };
     }
   } catch {
     // SDK lookup failed — use short ID
   }
 
   const fallback = sessionId.slice(0, 8);
-  sessionNameCache.set(sessionId, { name: fallback, cachedAt: Date.now() });
-  return fallback;
+  sessionMetaCache.set(sessionId, {
+    name: fallback,
+    cwd: null,
+    cachedAt: Date.now(),
+  });
+  return { name: fallback, cwd: null };
 }
 
 // --- Snapshot building ---
@@ -137,17 +148,18 @@ async function buildSnapshot(
 
   const entries = await Promise.all(
     [...tmuxSessions.entries()].map(async ([sessionId, tmuxName]) => {
-      const displayName = await resolveSessionDisplayName(sessionId);
-      return { sessionId, tmuxName, displayName };
+      const meta = await resolveSessionMeta(sessionId);
+      return { sessionId, tmuxName, ...meta };
     })
   );
 
-  for (const { sessionId, tmuxName, displayName } of entries) {
+  for (const { sessionId, tmuxName, name, cwd } of entries) {
     const agentType = getProviderIdFromSessionName(tmuxName) || "claude";
     const state = stateFiles.get(sessionId);
 
     snap[sessionId] = {
-      sessionName: displayName,
+      sessionName: name,
+      cwd,
       status: state?.status || "idle",
       lastLine: state?.lastLine || "",
       ...(state?.status === "waiting" && state.waitingContext
@@ -156,6 +168,19 @@ async function buildSnapshot(
       claudeSessionId: sessionId,
       agentType,
     };
+  }
+
+  // Filter out hidden sessions
+  try {
+    const db = getDb();
+    const hiddenRows = db
+      .prepare("SELECT item_id FROM hidden_items WHERE item_type = 'session'")
+      .all() as { item_id: string }[];
+    for (const { item_id } of hiddenRows) {
+      delete snap[item_id];
+    }
+  } catch {
+    // DB errors shouldn't break the monitor
   }
 
   return snap;
@@ -250,7 +275,7 @@ export function onStateFileChange(): void {
 }
 
 export function invalidateSessionName(sessionId: string): void {
-  sessionNameCache.delete(sessionId);
+  sessionMetaCache.delete(sessionId);
 }
 
 export function startStatusMonitor(): void {

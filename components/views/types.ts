@@ -5,6 +5,7 @@ import type { TabData } from "@/lib/panes";
 
 export interface SessionStatus {
   sessionName: string;
+  cwd?: string | null;
   status: "idle" | "running" | "waiting" | "error" | "dead";
   lastLine?: string;
   waitingContext?: string;
@@ -39,7 +40,6 @@ export interface ViewProps {
 
   // Handlers
   attachToSession: (session: Session) => void;
-  attachToActiveTmux: (sessionId: string, tmuxSessionName: string) => void;
   openSessionInNewTab: (session: Session) => void;
   handleNewSessionInProject: (projectId: string) => void;
   handleOpenTerminal: (projectId: string) => void;
