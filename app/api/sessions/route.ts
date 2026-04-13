@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { queries, type Session, type Group } from "@/lib/db";
+import { queries, type Session } from "@/lib/db";
 import { isValidAgentType, type AgentType } from "@/lib/providers";
 import { createWorktree } from "@/lib/worktrees";
 import { setupWorktree, type SetupResult } from "@/lib/env-setup";
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     let branchName: string | null = null;
     let actualWorkingDirectory = workingDirectory;
     let port: number | null = null;
-    let setupResult: SetupResult | null = null;
+    const setupResult: SetupResult | null = null;
 
     if (useWorktree && featureName) {
       try {

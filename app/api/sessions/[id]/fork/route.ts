@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { queries, type Session } from "@/lib/db";
+import { queries } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ id: string }>;

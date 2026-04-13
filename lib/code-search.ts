@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 
 /**
  * Check if ripgrep is available on the system
@@ -46,13 +46,13 @@ export function searchCode(
   const {
     maxResults = 100,
     contextLines = 2,
-    filePattern = "*",
-    caseSensitive = false,
+    filePattern: _filePattern = "*",
+    caseSensitive: _caseSensitive = false,
   } = options;
 
   try {
     // Use spawn instead of execSync for better control
-    const { spawnSync } = require("child_process");
+    // spawnSync imported at top level
 
     const args = [
       "--json",
@@ -100,7 +100,7 @@ export function searchCode(
   } catch (error) {
     console.error("Error in searchCode:", error);
     // ENOENT = command not found
-    if ((error as any).code === "ENOENT") {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       throw new Error(
         "ripgrep (rg) not found. Install with: brew install ripgrep"
       );

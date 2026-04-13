@@ -57,6 +57,7 @@ export function createWebSocketConnection(
 
   // Force reconnect - kills any existing connection and creates fresh one
   // Note: savedHandlers is populated after handlers are defined below
+  // eslint-disable-next-line prefer-const -- assigned after handler definitions below
   let savedHandlers: {
     onopen: typeof ws.onopen;
     onmessage: typeof ws.onmessage;

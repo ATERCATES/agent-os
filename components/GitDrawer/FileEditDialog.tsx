@@ -108,7 +108,7 @@ export function FileEditDialog({
     : baseDir;
   const filePath = `${expandedBaseDir}/${file.path}`;
   const fileName = file.path.split("/").pop() || file.path;
-  const repoName = "repoName" in file ? file.repoName : null;
+  const _repoName = "repoName" in file ? file.repoName : null;
   const hasChanges = modifiedContent !== initialModified;
 
   useEffect(() => {

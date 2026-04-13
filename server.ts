@@ -49,7 +49,7 @@ app.prepare().then(async () => {
 
   // Heartbeat: ping every 30s, kill if no pong in 10s
   const HEARTBEAT_INTERVAL = 30000;
-  const HEARTBEAT_TIMEOUT = 10000;
+  const _HEARTBEAT_TIMEOUT = 10000;
 
   function setupHeartbeat(ws: WebSocket) {
     let alive = true;

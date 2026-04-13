@@ -23,14 +23,14 @@ import type { SessionListProps } from "./SessionList.types";
 export type { SessionListProps } from "./SessionList.types";
 
 export function SessionList({
-  activeSessionId,
-  sessionStatuses,
+  activeSessionId: _activeSessionId,
+  sessionStatuses: _sessionStatuses,
   onSelect,
-  onOpenInTab,
-  onNewSessionInProject,
-  onOpenTerminal,
-  onStartDevServer,
-  onCreateDevServer,
+  onOpenInTab: _onOpenInTab,
+  onNewSessionInProject: _onNewSessionInProject,
+  onOpenTerminal: _onOpenTerminal,
+  onStartDevServer: _onStartDevServer,
+  onCreateDevServer: _onCreateDevServer,
   onResumeClaudeSession,
   onNewSession,
 }: SessionListProps) {
@@ -66,7 +66,7 @@ export function SessionList({
     rect: DOMRect;
   } | null>(null);
 
-  const hoverHandlers = {
+  const _hoverHandlers = {
     onHoverStart: useCallback(
       (_session: Session, _rect: DOMRect) => {
         if (isMobile) return;

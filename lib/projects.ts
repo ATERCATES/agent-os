@@ -5,7 +5,6 @@
  * Sessions inherit settings from their parent project.
  */
 
-import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
@@ -187,7 +186,9 @@ export async function getAllProjects(): Promise<Project[]> {
 /**
  * Get all projects with their dev server configurations
  */
-export async function getAllProjectsWithDevServers(): Promise<ProjectWithRepositories[]> {
+export async function getAllProjectsWithDevServers(): Promise<
+  ProjectWithRepositories[]
+> {
   const projects = await getAllProjects();
   const result: ProjectWithRepositories[] = [];
   for (const p of projects) {
@@ -242,7 +243,10 @@ export async function updateProject(
 /**
  * Toggle project expanded state
  */
-export async function toggleProjectExpanded(id: string, expanded: boolean): Promise<void> {
+export async function toggleProjectExpanded(
+  id: string,
+  expanded: boolean
+): Promise<void> {
   await queries.updateProjectExpanded(expanded, id);
 }
 
@@ -273,7 +277,9 @@ export async function deleteProject(id: string): Promise<boolean> {
 /**
  * Get sessions for a project
  */
-export async function getProjectSessions(projectId: string): Promise<Session[]> {
+export async function getProjectSessions(
+  projectId: string
+): Promise<Session[]> {
   return queries.getSessionsByProject(projectId);
 }
 
@@ -478,7 +484,9 @@ export function validateWorkingDirectory(dir: string): boolean {
 /**
  * Get repositories for a project
  */
-export async function getProjectRepositories(projectId: string): Promise<ProjectRepository[]> {
+export async function getProjectRepositories(
+  projectId: string
+): Promise<ProjectRepository[]> {
   const rawRepos = await queries.getProjectRepositories(projectId);
   return rawRepos.map((r) => ({
     ...r,
@@ -509,14 +517,23 @@ export async function addProjectRepository(
     for (const repo of existing) {
       if (repo.is_primary) {
         await queries.updateProjectRepository(
-          repo.name, repo.path, false, repo.sort_order, repo.id
+          repo.name,
+          repo.path,
+          false,
+          repo.sort_order,
+          repo.id
         );
       }
     }
   }
 
   await queries.createProjectRepository(
-    id, projectId, opts.name, opts.path, isPrimary, maxOrder + 1
+    id,
+    projectId,
+    opts.name,
+    opts.path,
+    isPrimary,
+    maxOrder + 1
   );
 
   const raw = (await queries.getProjectRepository(id))!;
@@ -549,7 +566,11 @@ export async function updateProjectRepository(
     for (const repo of allRepos) {
       if (repo.is_primary && repo.id !== id) {
         await queries.updateProjectRepository(
-          repo.name, repo.path, false, repo.sort_order, repo.id
+          repo.name,
+          repo.path,
+          false,
+          repo.sort_order,
+          repo.id
         );
       }
     }

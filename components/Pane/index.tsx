@@ -4,10 +4,7 @@ import { useRef, useCallback, useEffect, memo, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { usePanes } from "@/contexts/PaneContext";
 import { useViewport } from "@/hooks/useViewport";
-import type {
-  TerminalHandle,
-  TerminalScrollState,
-} from "@/components/Terminal";
+import type { TerminalHandle } from "@/components/Terminal";
 import type { Session, Project } from "@/lib/db";
 import { sessionRegistry } from "@/lib/client/session-registry";
 import { cn } from "@/lib/utils";
@@ -114,16 +111,20 @@ export const Pane = memo(function Pane({
     ? (terminalRefs.current.get(activeTab.id) ?? null)
     : null;
   const isFocused = focusedPaneId === paneId;
-  const session = activeTab
-    ? (sessions.find((s) => s.id === activeTab.sessionId) ??
-      (activeTab.sessionId
-        ? ({
-            id: activeTab.sessionId,
-            name: activeTab.sessionName || activeTab.sessionId.slice(0, 8),
-            working_directory: activeTab.workingDirectory || "~",
-          } as Session)
-        : null))
-    : null;
+  const session = useMemo(
+    () =>
+      activeTab
+        ? (sessions.find((s) => s.id === activeTab.sessionId) ??
+          (activeTab.sessionId
+            ? ({
+                id: activeTab.sessionId,
+                name: activeTab.sessionName || activeTab.sessionId.slice(0, 8),
+                working_directory: activeTab.workingDirectory || "~",
+              } as Session)
+            : null))
+        : null,
+    [activeTab, sessions]
+  );
 
   // File editor state - lifted here so it persists across view switches
   const fileEditor = useFileEditor();
@@ -236,7 +237,7 @@ export const Pane = memo(function Pane({
         setTimeout(() => handle.sendCommand(`tmux attach -t ${tmuxName}`), 100);
       }
     },
-    [paneId, sessions, onRegisterTerminal]
+    [paneId, paneData, sessions, onRegisterTerminal]
   );
 
   // Track current tab ID for cleanup

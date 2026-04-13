@@ -1,7 +1,7 @@
 import { spawn, ChildProcess } from "child_process";
 import { WebSocket } from "ws";
 import { StreamParser } from "./stream-parser";
-import { queries, type Session } from "../db";
+import { queries } from "../db";
 import type { ClaudeSessionOptions, ClientEvent } from "./types";
 
 interface ManagedSession {

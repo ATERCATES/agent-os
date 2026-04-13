@@ -100,6 +100,7 @@ export function QuickSwitcher({
       (a, b) =>
         new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when .data changes, not entire query objects
   }, [s0.data, s1.data, s2.data, s3.data, topProjects]);
 
   const filteredSessions = useMemo(() => {

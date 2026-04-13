@@ -108,7 +108,7 @@ export function ProjectCard({
     setIsEditing(false);
   };
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (_e: React.MouseEvent) => {
     if (isEditing) return;
     onClick?.();
     onToggleExpanded?.(!project.expanded);

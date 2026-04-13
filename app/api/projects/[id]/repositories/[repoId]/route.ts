@@ -3,7 +3,7 @@ import {
   updateProjectRepository,
   deleteProjectRepository,
 } from "@/lib/projects";
-import { queries, type ProjectRepository } from "@/lib/db";
+import { queries } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ id: string; repoId: string }>;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { WorkerCard, type WorkerInfo, type WorkerStatus } from "./WorkerCard";
+import { WorkerCard, type WorkerInfo } from "./WorkerCard";
 import { Button } from "./ui/button";
 import {
   RefreshCw,

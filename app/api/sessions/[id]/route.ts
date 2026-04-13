@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { queries, type Session } from "@/lib/db";
+import { queries } from "@/lib/db";
 import { deleteWorktree, isClaudeDeckWorktree } from "@/lib/worktrees";
 import { releasePort } from "@/lib/ports";
 import { killWorker } from "@/lib/orchestration";
@@ -81,7 +81,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       }
 
       // If this is a worktree session, also rename the git branch
-      if (existing.worktree_path && isClaudeDeckWorktree(existing.worktree_path)) {
+      if (
+        existing.worktree_path &&
+        isClaudeDeckWorktree(existing.worktree_path)
+      ) {
         try {
           const currentBranch = await getCurrentBranch(existing.worktree_path);
           const newBranchName = generateBranchName(body.name);
@@ -174,7 +177,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await queries.deleteSession(id);
 
     // Clean up worktree in background (non-blocking)
-    if (existing.worktree_path && isClaudeDeckWorktree(existing.worktree_path)) {
+    if (
+      existing.worktree_path &&
+      isClaudeDeckWorktree(existing.worktree_path)
+    ) {
       const worktreePath = existing.worktree_path; // Capture for closure
       runInBackground(async () => {
         const { exec } = await import("child_process");
@@ -196,7 +202,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Also cleanup worker worktrees in background
     if (workers.length > 0) {
       for (const worker of workers) {
-        if (worker.worktree_path && isClaudeDeckWorktree(worker.worktree_path)) {
+        if (
+          worker.worktree_path &&
+          isClaudeDeckWorktree(worker.worktree_path)
+        ) {
           const worktreePath = worker.worktree_path; // Capture for closure
           const workerId = worker.id; // Capture ID for task name
           runInBackground(async () => {
