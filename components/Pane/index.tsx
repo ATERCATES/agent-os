@@ -185,11 +185,15 @@ export const Pane = memo(function Pane({
   }, [focusPane, paneId]);
 
   const handleDetach = useCallback(() => {
+    const cwd = session?.working_directory;
     if (terminalRef) {
       terminalRef.sendInput("\x02d"); // Ctrl+B d to detach
+      if (cwd && cwd !== "~") {
+        setTimeout(() => terminalRef.sendCommand(`cd ${cwd}`), 200);
+      }
     }
     detachSession(paneId);
-  }, [detachSession, paneId, terminalRef]);
+  }, [detachSession, paneId, terminalRef, session]);
 
   const handleReattach = useCallback(() => {
     const tab = activeTab;
