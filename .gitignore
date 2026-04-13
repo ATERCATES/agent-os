@@ -48,15 +48,14 @@ agent-os.db-shm
 # Vercel
 .vercel
 
-# Local docs/plans (but allow docs/setup and docs/issues for public docs)
-docs/*
-!docs/setup/
-!docs/issues/
+# Local docs/plans (allow docs/ for technical documentation)
+!docs/
 .mcp.json
 .git-evening
 
 # Private development notes (open source repo)
-CLAUDE.md
+# CLAUDE.md tracked for agent context
+# CLAUDE.md
 master.md
 progress.md
 .git-evening
