@@ -15,7 +15,7 @@ import {
 } from "./lib/auth";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "0.0.0.0";
+const hostname = process.env.HOST || (dev ? "localhost" : "0.0.0.0");
 
 // Support: npm run dev -- -p 3012
 const pFlagIndex = process.argv.indexOf("-p");

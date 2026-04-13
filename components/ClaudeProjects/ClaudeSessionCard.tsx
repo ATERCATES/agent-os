@@ -1,14 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { MessageSquare, MoreHorizontal, Eye, EyeOff } from "lucide-react";
+import { MessageSquare, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { ClaudeSession } from "@/data/claude";
 
 interface ClaudeSessionCardProps {
@@ -71,30 +65,25 @@ export function ClaudeSessionCard({
       <span className="text-muted-foreground flex-shrink-0 text-[10px]">
         {getTimeAgo(session.lastActivity)}
       </span>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
-          >
-            <MoreHorizontal className="h-3.5 w-3.5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          {session.hidden ? (
-            <DropdownMenuItem onClick={onUnhide}>
-              <Eye className="mr-2 h-3 w-3" />
-              Show session
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem onClick={onHide}>
-              <EyeOff className="mr-2 h-3 w-3" />
-              Hide session
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (session.hidden) {
+            onUnhide();
+          } else {
+            onHide();
+          }
+        }}
+      >
+        {session.hidden ? (
+          <Eye className="h-3.5 w-3.5" />
+        ) : (
+          <EyeOff className="h-3.5 w-3.5" />
+        )}
+      </Button>
     </div>
   );
 }
