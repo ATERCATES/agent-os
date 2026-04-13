@@ -1,18 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { Session } from "@/lib/db";
 import type { SessionStatus } from "@/components/views/types";
-import { statusKeys } from "../sessions/keys";
-
-interface StatusResponse {
-  statuses: Record<string, SessionStatus>;
-}
-
-async function fetchStatuses(): Promise<StatusResponse> {
-  const res = await fetch("/api/sessions/status");
-  if (!res.ok) throw new Error("Failed to fetch statuses");
-  return res.json();
-}
 
 interface UseSessionStatusesOptions {
   sessions: Session[];
@@ -32,38 +20,94 @@ export function useSessionStatusesQuery({
   activeSessionId,
   checkStateChanges,
 }: UseSessionStatusesOptions) {
-  const query = useQuery({
-    queryKey: statusKeys.all,
-    queryFn: fetchStatuses,
-    staleTime: 2000,
-    refetchInterval: (query) => {
-      const statuses = query.state.data?.statuses;
-      if (!statuses) return 5000;
+  const [sessionStatuses, setSessionStatuses] = useState<
+    Record<string, SessionStatus>
+  >({});
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
-      const hasActive = Object.values(statuses).some(
-        (s) => s.status === "running" || s.status === "waiting"
-      );
-
-      return hasActive ? 5000 : 30000;
+  const handleStatuses = useCallback(
+    (statuses: Record<string, SessionStatus>) => {
+      setSessionStatuses(statuses);
     },
-  });
+    []
+  );
 
+  // Check state changes when statuses or sessions update
   useEffect(() => {
-    if (!query.data?.statuses) return;
-
-    const statuses = query.data.statuses;
+    if (Object.keys(sessionStatuses).length === 0) return;
 
     const sessionStates = sessions.map((s) => ({
       id: s.id,
       name: s.name,
-      status: (statuses[s.id]?.status || "dead") as SessionStatus["status"],
+      status: (sessionStatuses[s.id]?.status ||
+        "dead") as SessionStatus["status"],
     }));
     checkStateChanges(sessionStates, activeSessionId);
-    // Note: claude_session_id is now updated server-side in /api/sessions/status
-  }, [query.data, sessions, activeSessionId, checkStateChanges]);
+  }, [sessionStatuses, sessions, activeSessionId, checkStateChanges]);
+
+  // WebSocket connection for push-based updates
+  useEffect(() => {
+    let disposed = false;
+
+    function connect() {
+      if (disposed) return;
+
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(
+        `${protocol}//${window.location.host}/ws/updates`
+      );
+      wsRef.current = ws;
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "session-statuses") {
+            handleStatuses(msg.statuses);
+          }
+        } catch {
+          // ignore parse errors
+        }
+      };
+
+      ws.onclose = () => {
+        wsRef.current = null;
+        if (!disposed) {
+          // Reconnect after 2s
+          reconnectTimeoutRef.current = setTimeout(connect, 2000);
+        }
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    }
+
+    connect();
+
+    // Also do an initial HTTP fetch so we don't wait up to 1s for first push
+    fetch("/api/sessions/status")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.statuses && !disposed) {
+          handleStatuses(data.statuses);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      disposed = true;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      wsRef.current?.close();
+    };
+  }, [handleStatuses]);
 
   return {
-    sessionStatuses: query.data?.statuses ?? {},
-    isLoading: query.isLoading,
+    sessionStatuses,
+    isLoading: false,
   };
 }

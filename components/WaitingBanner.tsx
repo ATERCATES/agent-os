@@ -5,8 +5,7 @@ import { cn } from "@/lib/utils";
 import { AlertCircle, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SessionStatus } from "@/components/views/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { statusKeys } from "@/data/sessions/keys";
+import { useMutation } from "@tanstack/react-query";
 
 interface WaitingBannerProps {
   sessionStatuses: Record<string, SessionStatus>;
@@ -19,8 +18,6 @@ export function WaitingBanner({
   sessionStatuses,
   onSelectSession,
 }: WaitingBannerProps) {
-  const queryClient = useQueryClient();
-
   const waitingSessions = useMemo(
     () =>
       Object.entries(sessionStatuses)
@@ -37,9 +34,7 @@ export function WaitingBanner({
         body: JSON.stringify({ sessionName }),
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: statusKeys.all });
-    },
+    // Status monitor will pick up the change on next tick (~1s)
   });
 
   const handleDismiss = useCallback(

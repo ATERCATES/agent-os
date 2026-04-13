@@ -13,7 +13,7 @@ export function addUpdateClient(ws: WebSocket): void {
   ws.on("close", () => updateClients.delete(ws));
 }
 
-function broadcast(msg: object): void {
+export function broadcast(msg: object): void {
   const data = JSON.stringify(msg);
   for (const ws of updateClients) {
     if (ws.readyState === WebSocket.OPEN) {

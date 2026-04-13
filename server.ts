@@ -5,6 +5,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import * as pty from "node-pty";
 import { initDb } from "./lib/db";
 import { startWatcher, addUpdateClient } from "./lib/claude/watcher";
+import { startStatusMonitor } from "./lib/status-monitor";
 import {
   validateSession,
   parseCookies,
@@ -167,6 +168,7 @@ app.prepare().then(async () => {
   console.log("> Database initialized");
 
   startWatcher();
+  startStatusMonitor();
 
   server.listen(port, () => {
     console.log(`> ClaudeDeck ready on http://${hostname}:${port}`);
