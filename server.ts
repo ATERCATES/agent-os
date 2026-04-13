@@ -5,6 +5,12 @@ import { WebSocketServer, WebSocket } from "ws";
 import * as pty from "node-pty";
 import { initDb } from "./lib/db";
 import { startWatcher, addUpdateClient } from "./lib/claude/watcher";
+import {
+  validateSession,
+  parseCookies,
+  COOKIE_NAME,
+  hasUsers,
+} from "./lib/auth";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
@@ -34,6 +40,19 @@ app.prepare().then(async () => {
 
   server.on("upgrade", (request, socket, head) => {
     const { pathname } = parse(request.url || "");
+
+    // Validate auth for WebSocket connections
+    if (hasUsers()) {
+      const cookies = parseCookies(request.headers.cookie);
+      const token = cookies[COOKIE_NAME];
+      const user = token ? validateSession(token) : null;
+
+      if (!user) {
+        socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+        socket.destroy();
+        return;
+      }
+    }
 
     if (pathname === "/ws/terminal") {
       terminalWss.handleUpgrade(request, socket, head, (ws) => {
