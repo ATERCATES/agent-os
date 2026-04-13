@@ -65,12 +65,6 @@ export const queries = {
   getAllSessions: () =>
     query<Session>("SELECT * FROM sessions ORDER BY updated_at DESC"),
 
-  updateSessionStatus: (status: string, id: string) =>
-    execute(
-      "UPDATE sessions SET status = ?, updated_at = datetime('now') WHERE id = ?",
-      [status, id]
-    ),
-
   updateSessionClaudeId: (claudeSessionId: string, id: string) =>
     execute(
       "UPDATE sessions SET claude_session_id = ?, updated_at = datetime('now') WHERE id = ?",
