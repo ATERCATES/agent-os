@@ -87,16 +87,6 @@ export function useSessionStatusesQuery({
 
     connect();
 
-    // Also do an initial HTTP fetch so we don't wait up to 1s for first push
-    fetch("/api/sessions/status")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.statuses && !disposed) {
-          handleStatuses(data.statuses);
-        }
-      })
-      .catch(() => {});
-
     return () => {
       disposed = true;
       if (reconnectTimeoutRef.current) {

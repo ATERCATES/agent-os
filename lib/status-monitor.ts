@@ -261,7 +261,7 @@ export function startStatusMonitor(): void {
   // Initial tick after short delay (let DB init first)
   setTimeout(() => {
     tick().catch(console.error);
-  }, 1000);
+  }, 500);
 
   monitorInterval = setInterval(() => {
     tick().catch(console.error);
