@@ -21,11 +21,16 @@ import type { AgentType } from "./providers";
 import { broadcast } from "./claude/watcher";
 import { getDb } from "./db";
 import { STATES_DIR } from "./hooks/setup";
+import { getSessionInfo } from "@anthropic-ai/claude-agent-sdk";
 
 const execAsync = promisify(exec);
 
 const TICK_INTERVAL_MS = 3000;
+const SESSION_NAME_CACHE_TTL = 10_000;
 const UUID_PATTERN = getManagedSessionPattern();
+
+// Cache for session display names (summary from SDK)
+const sessionNameCache = new Map<string, { name: string; cachedAt: number }>();
 
 // --- Types ---
 
@@ -98,20 +103,51 @@ async function listTmuxSessions(): Promise<Map<string, string>> {
   }
 }
 
+// --- Session display name resolution ---
+
+async function resolveSessionDisplayName(sessionId: string): Promise<string> {
+  const cached = sessionNameCache.get(sessionId);
+  if (cached && Date.now() - cached.cachedAt < SESSION_NAME_CACHE_TTL) {
+    return cached.name;
+  }
+
+  try {
+    const info = await getSessionInfo(sessionId);
+    if (info) {
+      const name = info.customTitle || info.summary || sessionId.slice(0, 8);
+      sessionNameCache.set(sessionId, { name, cachedAt: Date.now() });
+      return name;
+    }
+  } catch {
+    // SDK lookup failed — use short ID
+  }
+
+  const fallback = sessionId.slice(0, 8);
+  sessionNameCache.set(sessionId, { name: fallback, cachedAt: Date.now() });
+  return fallback;
+}
+
 // --- Snapshot building ---
 
-function buildSnapshot(
+async function buildSnapshot(
   tmuxSessions: Map<string, string>,
   stateFiles: Map<string, StateFile>
-): Record<string, SessionStatusSnapshot> {
+): Promise<Record<string, SessionStatusSnapshot>> {
   const snap: Record<string, SessionStatusSnapshot> = {};
 
-  for (const [sessionId, sessionName] of tmuxSessions) {
-    const agentType = getProviderIdFromSessionName(sessionName) || "claude";
+  const entries = await Promise.all(
+    [...tmuxSessions.entries()].map(async ([sessionId, tmuxName]) => {
+      const displayName = await resolveSessionDisplayName(sessionId);
+      return { sessionId, tmuxName, displayName };
+    })
+  );
+
+  for (const { sessionId, tmuxName, displayName } of entries) {
+    const agentType = getProviderIdFromSessionName(tmuxName) || "claude";
     const state = stateFiles.get(sessionId);
 
     snap[sessionId] = {
-      sessionName,
+      sessionName: displayName,
       status: state?.status || "idle",
       lastLine: state?.lastLine || "",
       ...(state?.status === "waiting" && state.waitingContext
@@ -135,7 +171,13 @@ function snapshotChanged(
   for (const id of nextKeys) {
     const p = prev[id];
     const n = next[id];
-    if (!p || p.status !== n.status || p.lastLine !== n.lastLine) return true;
+    if (
+      !p ||
+      p.status !== n.status ||
+      p.lastLine !== n.lastLine ||
+      p.sessionName !== n.sessionName
+    )
+      return true;
   }
   return false;
 }
@@ -179,7 +221,7 @@ async function tick(): Promise<void> {
     }
   }
 
-  const newSnapshot = buildSnapshot(tmuxSessions, stateFiles);
+  const newSnapshot = await buildSnapshot(tmuxSessions, stateFiles);
 
   if (snapshotChanged(currentSnapshot, newSnapshot)) {
     updateDb(currentSnapshot, newSnapshot);
