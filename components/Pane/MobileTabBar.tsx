@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { OpenInVSCode } from "./OpenInVSCode";
 import {
   DropdownMenu,
   DropdownMenuContent,
