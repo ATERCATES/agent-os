@@ -1,28 +1,17 @@
 /**
- * Session status monitor — JSONL-based detection.
+ * Session status monitor — hook-based detection.
  *
- * Determines session state by reading the tail of Claude Code's JSONL
- * transcript files instead of scraping terminal content.
+ * Claude Code hooks write state files to ~/.claude-deck/session-states/.
+ * This module reads those files and pushes updates to the frontend via WebSocket.
  *
- * Detection criteria:
- * - RUNNING:  JSONL mtime changed in last 10s AND last entry is not turn_duration
- * - WAITING:  Last entry is assistant/tool_use with no subsequent tool_result
- *             (Claude requested a tool, user hasn't approved)
- * - IDLE:     Last entry is system/turn_duration (turn finished)
- *             OR file hasn't changed in >10s with no active indicators
- * - DEAD:     tmux session doesn't exist
- *
- * Resource usage:
- * - 1x exec("tmux list-sessions") per tick (3s fallback)
- * - fs.read of last 16KB per JSONL file — only when Chokidar fires
- * - Zero tmux capture-pane, zero terminal pattern matching
+ * The only periodic work is `tmux list-sessions` every 3s to detect dead sessions.
+ * All state transitions are event-driven via Chokidar watching the state files dir.
  */
 
 import { exec } from "child_process";
 import { promisify } from "util";
 import * as fs from "fs";
 import * as path from "path";
-import * as os from "os";
 import {
   getManagedSessionPattern,
   getSessionIdFromName,
@@ -31,50 +20,22 @@ import {
 import type { AgentType } from "./providers";
 import { broadcast } from "./claude/watcher";
 import { getDb } from "./db";
+import { STATES_DIR } from "./hooks/setup";
 
 const execAsync = promisify(exec);
 
-// --- Configuration ---
-
 const TICK_INTERVAL_MS = 3000;
-const RUNNING_THRESHOLD_MS = 10_000;
-const CLAUDE_ID_CACHE_TTL = 60_000;
-const JSONL_READ_SIZE = 16384; // 16KB tail read
-
 const UUID_PATTERN = getManagedSessionPattern();
-const CLAUDE_DIR =
-  process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), ".claude");
-
-// Entry types that are metadata, not conversation
-const METADATA_TYPES = new Set([
-  "file-history-snapshot",
-  "custom-title",
-  "permission-mode",
-]);
 
 // --- Types ---
 
 export type SessionStatus = "running" | "waiting" | "idle" | "dead";
 
-interface JsonlEntry {
-  type?: string;
-  subtype?: string;
-  message?: {
-    role?: string;
-    content?: Array<{ type?: string; name?: string; text?: string }> | string;
-  };
-}
-
-interface TrackedSession {
-  jsonlPath: string | null;
-  claudeSessionId: string | null;
-  claudeIdCachedAt: number;
-  cwdPath: string | null;
-  cwdCachedAt: number;
-  status: SessionStatus;
+interface StateFile {
+  status: "running" | "waiting" | "idle";
   lastLine: string;
   waitingContext?: string;
-  lastMtimeMs: number;
+  ts: number;
 }
 
 export interface SessionStatusSnapshot {
@@ -88,271 +49,79 @@ export interface SessionStatusSnapshot {
 
 // --- State ---
 
-const tracked = new Map<string, TrackedSession>();
 let currentSnapshot: Record<string, SessionStatusSnapshot> = {};
 let monitorTimer: ReturnType<typeof setInterval> | null = null;
 
-// --- JSONL reading (pure Node fs, zero exec) ---
+// --- State file reading ---
 
-async function readJsonlTail(
-  filePath: string
-): Promise<{ entries: JsonlEntry[]; mtimeMs: number } | null> {
-  let fd: fs.promises.FileHandle | null = null;
+function readStateFile(sessionId: string): StateFile | null {
   try {
-    fd = await fs.promises.open(filePath, "r");
-    const stat = await fd.stat();
-    const readSize = Math.min(stat.size, JSONL_READ_SIZE);
-    if (readSize === 0) return { entries: [], mtimeMs: stat.mtimeMs };
-
-    const buffer = Buffer.alloc(readSize);
-    await fd.read(buffer, 0, readSize, stat.size - readSize);
-
-    const text = buffer.toString("utf-8");
-    // First line may be partial (we started mid-line), skip it
-    const firstNewline = text.indexOf("\n");
-    const clean = firstNewline >= 0 ? text.slice(firstNewline + 1) : text;
-
-    const entries: JsonlEntry[] = [];
-    for (const line of clean.split("\n")) {
-      if (!line.trim()) continue;
-      try {
-        entries.push(JSON.parse(line));
-      } catch {
-        // skip malformed / partial lines
-      }
-    }
-
-    return { entries, mtimeMs: stat.mtimeMs };
-  } catch {
-    return null;
-  } finally {
-    await fd?.close();
-  }
-}
-
-// --- Status determination ---
-
-function determineStatus(
-  entries: JsonlEntry[],
-  mtimeMs: number
-): { status: SessionStatus; lastLine: string; waitingContext?: string } {
-  const mtimeAge = Date.now() - mtimeMs;
-
-  // Filter to meaningful entries (skip metadata)
-  const meaningful = entries.filter((e) => !METADATA_TYPES.has(e.type || ""));
-  const last = meaningful[meaningful.length - 1];
-
-  if (!last) {
-    return { status: "idle", lastLine: "" };
-  }
-
-  // IDLE: turn finished (definitive signal)
-  if (last.type === "system" && last.subtype === "turn_duration") {
-    return { status: "idle", lastLine: findLastText(meaningful) };
-  }
-
-  // RUNNING: file recently modified and turn hasn't finished
-  if (mtimeAge < RUNNING_THRESHOLD_MS) {
-    return { status: "running", lastLine: findLastText(meaningful) };
-  }
-
-  // WAITING: last assistant entry has tool_use without a following tool_result
-  if (last.message?.role === "assistant") {
-    const content = last.message?.content;
-    if (Array.isArray(content)) {
-      const toolUse = content.find((c) => c.type === "tool_use");
-      if (toolUse) {
-        const toolName = toolUse.name || "unknown tool";
-        return {
-          status: "waiting",
-          lastLine: `Waiting for approval: ${toolName}`,
-          waitingContext: `Permission requested for ${toolName}`,
-        };
-      }
-    }
-  }
-
-  // Default: idle
-  return { status: "idle", lastLine: findLastText(meaningful) };
-}
-
-function findLastText(entries: JsonlEntry[]): string {
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const content = entries[i].message?.content;
-    if (!Array.isArray(content)) continue;
-    for (let j = content.length - 1; j >= 0; j--) {
-      if (content[j].type === "text" && content[j].text) {
-        return content[j].text!.slice(0, 200);
-      }
-    }
-  }
-  return "";
-}
-
-// --- JSONL path resolution ---
-
-function findJsonlPath(
-  claudeSessionId: string,
-  cwdPath: string | null
-): string | null {
-  if (!claudeSessionId) return null;
-
-  // Try cwd-based path first
-  if (cwdPath) {
-    const dirName = cwdPath.replace(/\//g, "-");
-    const candidate = path.join(
-      CLAUDE_DIR,
-      "projects",
-      dirName,
-      `${claudeSessionId}.jsonl`
-    );
-    if (fs.existsSync(candidate)) return candidate;
-  }
-
-  // Fallback: search all project directories
-  const projectsDir = path.join(CLAUDE_DIR, "projects");
-  try {
-    for (const dir of fs.readdirSync(projectsDir, { withFileTypes: true })) {
-      if (!dir.isDirectory()) continue;
-      const candidate = path.join(
-        projectsDir,
-        dir.name,
-        `${claudeSessionId}.jsonl`
-      );
-      if (fs.existsSync(candidate)) return candidate;
-    }
-  } catch {
-    // ignore
-  }
-
-  return null;
-}
-
-async function resolveCwd(sessionName: string): Promise<string | null> {
-  try {
-    const { stdout } = await execAsync(
-      `tmux display-message -t "${sessionName}" -p "#{pane_current_path}" 2>/dev/null || echo ""`
-    );
-    return stdout.trim() || null;
+    const filePath = path.join(STATES_DIR, `${sessionId}.json`);
+    const raw = fs.readFileSync(filePath, "utf-8");
+    return JSON.parse(raw);
   } catch {
     return null;
   }
 }
 
-async function resolveClaudeSessionId(
-  sessionName: string
-): Promise<string | null> {
+function listStateFiles(): Map<string, StateFile> {
+  const map = new Map<string, StateFile>();
   try {
-    const { stdout } = await execAsync(
-      `tmux show-environment -t "${sessionName}" CLAUDE_SESSION_ID 2>/dev/null || echo ""`
-    );
-    const line = stdout.trim();
-    if (line.startsWith("CLAUDE_SESSION_ID=")) {
-      const val = line.replace("CLAUDE_SESSION_ID=", "");
-      if (val && val !== "null") return val;
+    for (const file of fs.readdirSync(STATES_DIR)) {
+      if (!file.endsWith(".json")) continue;
+      const sessionId = file.replace(".json", "");
+      const state = readStateFile(sessionId);
+      if (state) map.set(sessionId, state);
     }
   } catch {
-    // ignore
+    // dir may not exist yet
   }
-  return null;
+  return map;
 }
 
 // --- tmux ---
 
-async function listTmuxSessions(): Promise<Set<string>> {
+async function listTmuxSessions(): Promise<Map<string, string>> {
+  // Returns Map<sessionId, sessionName>
   try {
     const { stdout } = await execAsync(
       "tmux list-sessions -F '#{session_name}' 2>/dev/null || echo \"\""
     );
-    return new Set(stdout.trim().split("\n").filter(Boolean));
+    const map = new Map<string, string>();
+    for (const name of stdout.trim().split("\n")) {
+      if (!name || !UUID_PATTERN.test(name)) continue;
+      map.set(getSessionIdFromName(name), name);
+    }
+    return map;
   } catch {
-    return new Set();
+    return new Map();
   }
 }
 
-// --- Session lifecycle ---
+// --- Snapshot building ---
 
-async function resolveSessionMapping(
-  session: TrackedSession,
-  sessionName: string
-): Promise<void> {
-  const now = Date.now();
-
-  if (
-    !session.claudeSessionId ||
-    now - session.claudeIdCachedAt > CLAUDE_ID_CACHE_TTL
-  ) {
-    session.claudeSessionId = await resolveClaudeSessionId(sessionName);
-    session.claudeIdCachedAt = now;
-  }
-
-  if (!session.cwdPath || now - session.cwdCachedAt > CLAUDE_ID_CACHE_TTL) {
-    session.cwdPath = await resolveCwd(sessionName);
-    session.cwdCachedAt = now;
-  }
-
-  if (!session.jsonlPath && session.claudeSessionId) {
-    session.jsonlPath = findJsonlPath(session.claudeSessionId, session.cwdPath);
-  }
-}
-
-async function evaluateSession(session: TrackedSession): Promise<void> {
-  if (!session.jsonlPath) {
-    session.status = "idle";
-    session.lastLine = "";
-    session.waitingContext = undefined;
-    return;
-  }
-
-  const result = await readJsonlTail(session.jsonlPath);
-  if (!result) {
-    session.status = "idle";
-    session.lastLine = "";
-    session.waitingContext = undefined;
-    return;
-  }
-
-  session.lastMtimeMs = result.mtimeMs;
-  const { status, lastLine, waitingContext } = determineStatus(
-    result.entries,
-    result.mtimeMs
-  );
-  session.status = status;
-  session.lastLine = lastLine;
-  session.waitingContext = waitingContext;
-}
-
-function createTrackedSession(): TrackedSession {
-  return {
-    jsonlPath: null,
-    claudeSessionId: null,
-    claudeIdCachedAt: 0,
-    cwdPath: null,
-    cwdCachedAt: 0,
-    status: "idle",
-    lastLine: "",
-    lastMtimeMs: 0,
-  };
-}
-
-// --- Core tick ---
-
-function buildSnapshot(): Record<string, SessionStatusSnapshot> {
+function buildSnapshot(
+  tmuxSessions: Map<string, string>,
+  stateFiles: Map<string, StateFile>
+): Record<string, SessionStatusSnapshot> {
   const snap: Record<string, SessionStatusSnapshot> = {};
-  for (const [name, session] of tracked) {
-    const id = getSessionIdFromName(name);
-    const agentType = getProviderIdFromSessionName(name) || "claude";
-    snap[id] = {
-      sessionName: name,
-      status: session.status,
-      lastLine: session.lastLine,
-      ...(session.status === "waiting" && session.waitingContext
-        ? { waitingContext: session.waitingContext }
+
+  for (const [sessionId, sessionName] of tmuxSessions) {
+    const agentType = getProviderIdFromSessionName(sessionName) || "claude";
+    const state = stateFiles.get(sessionId);
+
+    snap[sessionId] = {
+      sessionName,
+      status: state?.status || "idle",
+      lastLine: state?.lastLine || "",
+      ...(state?.status === "waiting" && state.waitingContext
+        ? { waitingContext: state.waitingContext }
         : {}),
-      claudeSessionId: session.claudeSessionId,
+      claudeSessionId: sessionId,
       agentType,
     };
   }
+
   return snap;
 }
 
@@ -393,38 +162,24 @@ function updateDb(
   }
 }
 
+// --- Core tick (only for dead detection + state file sync) ---
+
 async function tick(): Promise<void> {
   const tmuxSessions = await listTmuxSessions();
-  const managedNames = [...tmuxSessions].filter((s) => UUID_PATTERN.test(s));
+  const stateFiles = listStateFiles();
 
-  // Clear if no sessions
-  if (managedNames.length === 0 && Object.keys(currentSnapshot).length > 0) {
-    currentSnapshot = {};
-    tracked.clear();
-    broadcast({ type: "session-statuses", statuses: {} });
-    return;
+  // Clean up state files for sessions that no longer exist in tmux
+  for (const sessionId of stateFiles.keys()) {
+    if (!tmuxSessions.has(sessionId)) {
+      try {
+        fs.unlinkSync(path.join(STATES_DIR, `${sessionId}.json`));
+      } catch {
+        // ignore
+      }
+    }
   }
 
-  // Ensure all managed sessions are tracked
-  for (const name of managedNames) {
-    if (!tracked.has(name)) tracked.set(name, createTrackedSession());
-  }
-
-  // Clean up dead sessions
-  for (const [name] of tracked) {
-    if (!tmuxSessions.has(name)) tracked.delete(name);
-  }
-
-  // Resolve and evaluate all sessions in parallel
-  await Promise.all(
-    managedNames.map(async (name) => {
-      const session = tracked.get(name)!;
-      await resolveSessionMapping(session, name);
-      await evaluateSession(session);
-    })
-  );
-
-  const newSnapshot = buildSnapshot();
+  const newSnapshot = buildSnapshot(tmuxSessions, stateFiles);
 
   if (snapshotChanged(currentSnapshot, newSnapshot)) {
     updateDb(currentSnapshot, newSnapshot);
@@ -439,44 +194,34 @@ export function getStatusSnapshot(): Record<string, SessionStatusSnapshot> {
   return currentSnapshot;
 }
 
-export function acknowledge(sessionName: string): void {
-  // With JSONL-based detection, acknowledge is a no-op — status is
-  // determined by file content, not by an acknowledged flag.
-  void sessionName;
+export function acknowledge(_sessionName: string): void {
+  // With hook-based detection, acknowledge is a no-op.
+  // Status is determined by Claude Code's hook events, not by us.
 }
 
-/** Called by Chokidar when a JSONL file changes — evaluates instantly. */
-export function onJsonlChange(filePath: string): void {
-  for (const [, session] of tracked) {
-    if (session.jsonlPath === filePath) {
-      evaluateSession(session)
-        .then(() => {
-          const newSnapshot = buildSnapshot();
-          if (snapshotChanged(currentSnapshot, newSnapshot)) {
-            updateDb(currentSnapshot, newSnapshot);
-            currentSnapshot = newSnapshot;
-            broadcast({ type: "session-statuses", statuses: newSnapshot });
-          }
-        })
-        .catch(console.error);
-      return;
-    }
-  }
-
-  // Unknown file — might be a new session, trigger full tick
+/**
+ * Called by Chokidar when a state file in ~/.claude-deck/session-states/ changes.
+ * Triggers an immediate re-read and broadcast.
+ */
+export function onStateFileChange(): void {
   tick().catch(console.error);
 }
 
 export function startStatusMonitor(): void {
   if (monitorTimer) return;
 
+  // Ensure states directory exists
+  fs.mkdirSync(STATES_DIR, { recursive: true });
+
+  // Initial tick
   setTimeout(() => tick().catch(console.error), 500);
 
+  // Periodic fallback (catches tmux session death, missed events)
   monitorTimer = setInterval(() => {
     tick().catch(console.error);
   }, TICK_INTERVAL_MS);
 
-  console.log("> Status monitor started (JSONL-based, 3s fallback tick)");
+  console.log("> Status monitor started (hook-based, 3s fallback tick)");
 }
 
 export function stopStatusMonitor(): void {

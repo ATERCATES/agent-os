@@ -3,7 +3,8 @@ import path from "path";
 import os from "os";
 import { WebSocket } from "ws";
 import { invalidateProject, invalidateAll } from "./jsonl-cache";
-import { onJsonlChange } from "../status-monitor";
+import { onStateFileChange } from "../status-monitor";
+import { STATES_DIR } from "../hooks/setup";
 
 const CLAUDE_PROJECTS_DIR = path.join(os.homedir(), ".claude", "projects");
 
@@ -45,17 +46,15 @@ function handleFileChange(filePath: string): void {
 
 export function startWatcher(): void {
   try {
-    const watcher = watch(CLAUDE_PROJECTS_DIR, {
+    // Watch Claude projects for session list updates
+    const projectsWatcher = watch(CLAUDE_PROJECTS_DIR, {
       ignoreInitial: true,
       depth: 2,
       ignored: [/node_modules/, /\.git/, /subagents/],
     });
 
-    watcher.on("change", (fp) => {
-      handleFileChange(fp);
-      if (fp.endsWith(".jsonl")) onJsonlChange(fp);
-    });
-    watcher.on("add", (fp) => {
+    projectsWatcher.on("change", handleFileChange);
+    projectsWatcher.on("add", (fp) => {
       handleFileChange(fp);
       const relative = path.relative(CLAUDE_PROJECTS_DIR, fp);
       if (!relative.includes(path.sep)) {
@@ -63,12 +62,26 @@ export function startWatcher(): void {
         broadcast({ type: "projects-changed" });
       }
     });
-    watcher.on("addDir", () => {
+    projectsWatcher.on("addDir", () => {
       invalidateAll();
       broadcast({ type: "projects-changed" });
     });
 
     console.log("> File watcher started on ~/.claude/projects/");
+
+    // Watch session state files written by hooks
+    const statesWatcher = watch(STATES_DIR, {
+      ignoreInitial: true,
+      depth: 0,
+    });
+
+    statesWatcher.on("change", onStateFileChange);
+    statesWatcher.on("add", onStateFileChange);
+    statesWatcher.on("unlink", onStateFileChange);
+
+    console.log(
+      "> State file watcher started on ~/.claude-deck/session-states/"
+    );
   } catch (err) {
     console.error("Failed to start file watcher:", err);
   }

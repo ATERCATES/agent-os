@@ -6,6 +6,7 @@ import * as pty from "node-pty";
 import { initDb } from "./lib/db";
 import { startWatcher, addUpdateClient } from "./lib/claude/watcher";
 import { startStatusMonitor } from "./lib/status-monitor";
+import { setupHooks } from "./lib/hooks/setup";
 import {
   validateSession,
   parseCookies,
@@ -167,6 +168,7 @@ app.prepare().then(async () => {
   await initDb();
   console.log("> Database initialized");
 
+  setupHooks();
   startWatcher();
   startStatusMonitor();
 
