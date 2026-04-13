@@ -41,8 +41,13 @@ export function OpenInVSCode({
       window.open(`vscode://file${workingDirectory}`, "_self");
     } else {
       const user = systemInfo?.user || "root";
+      const sshHost = systemInfo?.sshHost || host;
+      const sshPort = systemInfo?.sshPort;
+      const remote = sshPort
+        ? `${user}@${sshHost}:${sshPort}`
+        : `${user}@${sshHost}`;
       window.open(
-        `vscode://vscode-remote/ssh-remote+${user}@${host}${workingDirectory}`,
+        `vscode://vscode-remote/ssh-remote+${remote}${workingDirectory}`,
         "_self"
       );
     }
