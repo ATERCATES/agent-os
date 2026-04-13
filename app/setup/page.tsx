@@ -33,6 +33,7 @@ export default function SetupPage() {
     if (enableTotp && !totpSecret && username.length >= 3) {
       generateTotp();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally omit generateTotp and totpSecret to avoid regenerating secret on every render
   }, [enableTotp, username]);
 
   const generateTotp = async () => {
@@ -217,6 +218,7 @@ export default function SetupPage() {
                 Scan with your authenticator app
               </p>
               <div className="flex justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element -- base64 data URL, next/image not applicable */}
                 <img
                   src={qrDataUrl}
                   alt="TOTP QR Code"
