@@ -219,7 +219,7 @@ export const Pane = memo(function Pane({
   const getTerminalConnectedHandler = useCallback(
     (tab: (typeof paneData.tabs)[0]) => () => {
       console.log(
-        `[AgentOS] Terminal connected for pane: ${paneId}, tab: ${tab.id}`
+        `[ClaudeDeck] Terminal connected for pane: ${paneId}, tab: ${tab.id}`
       );
       const handle = terminalRefs.current.get(tab.id);
       if (!handle) return;
@@ -246,11 +246,11 @@ export const Pane = memo(function Pane({
   // Cleanup on unmount only
   useEffect(() => {
     console.log(
-      `[AgentOS] Pane ${paneId} mounted, activeTab: ${activeTab?.id || "null"}`
+      `[ClaudeDeck] Pane ${paneId} mounted, activeTab: ${activeTab?.id || "null"}`
     );
     return () => {
       console.log(
-        `[AgentOS] Pane ${paneId} unmounting, clearing terminal ref for tab: ${activeTabIdRef.current}`
+        `[ClaudeDeck] Pane ${paneId} unmounting, clearing terminal ref for tab: ${activeTabIdRef.current}`
       );
       if (activeTabIdRef.current) {
         onRegisterTerminal(paneId, activeTabIdRef.current, null);

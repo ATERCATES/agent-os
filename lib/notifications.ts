@@ -1,4 +1,4 @@
-// Notification utilities for AgentOS
+// Notification utilities for ClaudeDeck
 
 export type NotificationEvent = "waiting" | "error" | "completed";
 

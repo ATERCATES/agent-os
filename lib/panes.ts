@@ -209,7 +209,7 @@ export function getAllPaneIds(layout: PaneLayout): string[] {
 }
 
 // localStorage key for persisting pane state
-const PANE_STATE_KEY = "agent-os-pane-state";
+const PANE_STATE_KEY = "claude-deck-pane-state";
 
 export function savePaneState(state: PaneState): void {
   try {

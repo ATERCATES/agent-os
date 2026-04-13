@@ -147,7 +147,7 @@ async function getLastLine(sessionName: string): Promise<string> {
   }
 }
 
-// UUID pattern for agent-os managed sessions (derived from registry)
+// UUID pattern for claude-deck managed sessions (derived from registry)
 const UUID_PATTERN = getManagedSessionPattern();
 
 // Track previous statuses to detect changes
@@ -161,7 +161,7 @@ export async function GET() {
   try {
     const sessions = await getTmuxSessions();
 
-    // Get status for agent-os managed sessions
+    // Get status for claude-deck managed sessions
     const managedSessions = sessions.filter((s) => UUID_PATTERN.test(s));
 
     // Use the new status detector

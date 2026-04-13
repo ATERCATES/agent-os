@@ -1,4 +1,4 @@
-# Agent-OS Future Ideas
+# ClaudeDeck Future Ideas
 
 ## Features
 

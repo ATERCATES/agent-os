@@ -150,6 +150,6 @@ app.prepare().then(async () => {
   startWatcher();
 
   server.listen(port, () => {
-    console.log(`> Agent-OS ready on http://${hostname}:${port}`);
+    console.log(`> ClaudeDeck ready on http://${hostname}:${port}`);
   });
 });

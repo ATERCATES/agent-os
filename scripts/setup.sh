@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Agent-OS Setup"
+echo "ClaudeDeck Setup"
 echo "=============="
 echo ""
 
@@ -66,7 +66,7 @@ if [ ! -f "$TMUX_CONF" ] || ! grep -q "mouse on" "$TMUX_CONF" 2>/dev/null; then
     echo "Configuring tmux (mouse on for scroll support)..."
     cat >> "$TMUX_CONF" << 'TMUX'
 
-# Agent-OS: enable mouse for scroll support in web terminal
+# ClaudeDeck: enable mouse for scroll support in web terminal
 set -g mouse on
 set -g history-limit 50000
 set -g default-terminal "xterm-256color"
@@ -103,7 +103,7 @@ if ! command -v claude &> /dev/null; then
     echo "Claude Code CLI not found. Install with:"
     echo "  npm install -g @anthropic-ai/claude-code"
     echo ""
-    echo "⚠ Agent-OS requires at least one AI CLI to function."
+    echo "⚠ ClaudeDeck requires at least one AI CLI to function."
 else
     echo "✓ Claude CLI: installed"
 fi
@@ -117,8 +117,8 @@ if [ ! -f .env ]; then
 fi
 
 # ── Data directory ───────────────────────────────────────
-mkdir -p "$HOME/.agent-os"
-echo "✓ Data dir: ~/.agent-os/"
+mkdir -p "$HOME/.claude-deck"
+echo "✓ Data dir: ~/.claude-deck/"
 
 # ── Install dependencies ────────────────────────────────
 echo ""

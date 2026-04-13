@@ -1,4 +1,4 @@
-# CLAUDE.md — Agent-OS
+# CLAUDE.md — ClaudeDeck
 
 Web-based Claude Code session manager. React + Next.js + xterm.js + tmux.
 
@@ -27,7 +27,7 @@ Comprehensive technical docs are in `docs/`:
 
 - **Sessions come from JSONL** (`~/.claude/projects/`), NOT from the SQLite database
 - **tmux is required** with `mouse on` in `~/.tmux.conf` — without it, terminal scroll breaks
-- **SQLite** is used for agent-os features (projects, groups, dev servers) not for sessions
+- **SQLite** is used for claude-deck features (projects, groups, dev servers) not for sessions
 - **Single-user per instance** — no auth, each user runs their own instance
 - **Provider: Claude only** — OpenCode was removed, provider abstraction remains if needed
 

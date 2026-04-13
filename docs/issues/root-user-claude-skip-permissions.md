@@ -5,12 +5,12 @@
 
 ## Problem
 
-When AgentOS is running on a VM as root (common for self-hosted setups), sessions using Claude Code with auto-approve enabled would immediately exit. The tmux session would flash the banner and die — no error visible to the user.
+When ClaudeDeck is running on a VM as root (common for self-hosted setups), sessions using Claude Code with auto-approve enabled would immediately exit. The tmux session would flash the banner and die — no error visible to the user.
 
 ## Symptoms
 
 - Tmux session shows `[exited]` immediately after attaching
-- The AgentOS UI shows the session but the terminal is dead
+- The ClaudeDeck UI shows the session but the terminal is dead
 - Other providers (Codex, Aider, etc.) are unaffected
 
 ## Root Cause
@@ -30,7 +30,7 @@ The init script (`/api/sessions/init-script`) generates a shell script that runs
 3. Checked if `claude` was in PATH and working — it was
 4. Reproduced by running the init script inside a test tmux session with `sleep 30` after it to capture the output:
    ```bash
-   tmux new-session -d -s test "bash /tmp/agent-os-init-*.sh; echo EXIT: $?; sleep 30"
+   tmux new-session -d -s test "bash /tmp/claude-deck-init-*.sh; echo EXIT: $?; sleep 30"
    tmux capture-pane -t test -p
    ```
 5. This revealed the `--dangerously-skip-permissions cannot be used with root/sudo` error

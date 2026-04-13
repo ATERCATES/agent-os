@@ -1,4 +1,4 @@
-# AgentOS
+# ClaudeDeck
 
 A mobile-first web UI for managing AI coding sessions.
 
@@ -6,7 +6,7 @@ A mobile-first web UI for managing AI coding sessions.
 
 https://github.com/user-attachments/assets/0e2e66f7-037e-4739-99ec-608d1840df0a
 
-![AgentOS Screenshot](screenshot-v2.png)
+![ClaudeDeck Screenshot](screenshot-v2.png)
 
 ## Installation
 
@@ -16,13 +16,13 @@ If you already have Node.js 20+ installed:
 
 ```bash
 # Install globally
-npm install -g @saadnvd1/agent-os
+npm install -g @saadnvd1/claude-deck
 
 # Run setup (checks/installs tmux, ripgrep, builds app)
-agent-os install
+claude-deck install
 
 # Start the server
-agent-os start
+claude-deck start
 ```
 
 ### Via curl (Installs everything)
@@ -30,26 +30,26 @@ agent-os start
 For fresh installs without Node.js:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/saadnvd1/agent-os/main/scripts/install.sh | bash
-agent-os start
+curl -fsSL https://raw.githubusercontent.com/saadnvd1/claude-deck/main/scripts/install.sh | bash
+claude-deck start
 ```
 
 ### Desktop App
 
-Download native desktop apps from [Releases](https://github.com/saadnvd1/agent-os/releases):
+Download native desktop apps from [Releases](https://github.com/saadnvd1/claude-deck/releases):
 
 - macOS (Apple Silicon): `.dmg`
 - Linux: `.deb` or `.AppImage`
 
-> **Note:** The desktop app is a native wrapper around the web UI. You still need to install and run AgentOS (via the installer script above) for the backend server. The desktop app just provides a convenient native window instead of using your browser.
+> **Note:** The desktop app is a native wrapper around the web UI. You still need to install and run ClaudeDeck (via the installer script above) for the backend server. The desktop app just provides a convenient native window instead of using your browser.
 
-> **Don't want to self-host?** Try [AgentOS Cloud](https://runagentos.com) - pre-configured cloud VMs for AI coding.
+> **Don't want to self-host?** Try [ClaudeDeck Cloud](https://runagentos.com) - pre-configured cloud VMs for AI coding.
 
 ### Manual Install
 
 ```bash
-git clone https://github.com/saadnvd1/agent-os
-cd agent-os
+git clone https://github.com/saadnvd1/claude-deck
+cd claude-deck
 npm install
 npm run dev  # http://localhost:3011
 ```
@@ -58,7 +58,7 @@ npm run dev  # http://localhost:3011
 
 - Node.js 20+
 - tmux
-- [ripgrep](https://github.com/BurntSushi/ripgrep) (for code search - auto-installed by installer script, or run `agent-os update`)
+- [ripgrep](https://github.com/BurntSushi/ripgrep) (for code search - auto-installed by installer script, or run `claude-deck update`)
 - At least one AI CLI: [Claude Code](https://github.com/anthropics/claude-code), [Codex](https://github.com/openai/codex), [OpenCode](https://github.com/anomalyco/opencode), [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Aider](https://aider.chat/), or [Cursor CLI](https://cursor.com/cli)
 
 ## Supported Agents
@@ -91,12 +91,12 @@ npm run dev  # http://localhost:3011
 ## CLI Commands
 
 ```bash
-agent-os run       # Start and open browser
-agent-os start     # Start in background
-agent-os stop      # Stop server
-agent-os status    # Show URLs
-agent-os logs      # Tail logs
-agent-os update    # Update to latest
+claude-deck run       # Start and open browser
+claude-deck start     # Start in background
+claude-deck stop      # Stop server
+claude-deck status    # Show URLs
+claude-deck logs      # Tail logs
+claude-deck update    # Update to latest
 ```
 
 ## Mobile Access
@@ -113,8 +113,8 @@ For configuration and advanced usage, see the [docs](https://www.runagentos.com/
 
 ## Related Projects
 
-- **[aTerm](https://github.com/saadnvd1/aTerm)** - A Tauri-based desktop terminal workspace for AI-assisted coding. While AgentOS is a mobile-first web UI, aTerm is a native desktop app with multi-pane layouts optimized for running AI coding agents (Claude Code, Aider, OpenCode) alongside shells, dev servers, and a built-in git panel. Choose AgentOS for mobile access and browser-based workflows, or aTerm for a native desktop terminal experience.
-- **[LumifyHub](https://lumifyhub.io)** - Team collaboration platform with real-time chat and structured documentation. Useful alongside AgentOS for coordinating multi-agent work across a team — share session context, document architectural decisions from coding sessions, and track progress across parallel agent workflows.
+- **[aTerm](https://github.com/saadnvd1/aTerm)** - A Tauri-based desktop terminal workspace for AI-assisted coding. While ClaudeDeck is a mobile-first web UI, aTerm is a native desktop app with multi-pane layouts optimized for running AI coding agents (Claude Code, Aider, OpenCode) alongside shells, dev servers, and a built-in git panel. Choose ClaudeDeck for mobile access and browser-based workflows, or aTerm for a native desktop terminal experience.
+- **[LumifyHub](https://lumifyhub.io)** - Team collaboration platform with real-time chat and structured documentation. Useful alongside ClaudeDeck for coordinating multi-agent work across a team — share session context, document architectural decisions from coding sessions, and track progress across parallel agent workflows.
 
 ## License
 

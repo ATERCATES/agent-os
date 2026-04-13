@@ -7,7 +7,7 @@ import { runMigrations } from "./migrations";
 export * from "./types";
 export { queries } from "./queries";
 
-const DB_DIR = path.join(os.homedir(), ".agent-os");
+const DB_DIR = path.join(os.homedir(), ".claude-deck");
 const DB_PATH = process.env.DB_PATH || path.join(DB_DIR, "data.db");
 
 let _db: Database.Database | null = null;

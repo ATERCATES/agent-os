@@ -2,13 +2,13 @@
 
 ## Overview
 
-Agent-OS is a web-based Claude Code session manager. It reads session data from `~/.claude/projects/` JSONL files and provides a terminal UI (xterm.js) to interact with Claude Code via tmux.
+ClaudeDeck is a web-based Claude Code session manager. It reads session data from `~/.claude/projects/` JSONL files and provides a terminal UI (xterm.js) to interact with Claude Code via tmux.
 
 ## Stack
 
 - **Frontend**: Next.js 16 + React 18 + TypeScript + Tailwind CSS
 - **Backend**: Custom server (`server.ts`) with Next.js + WebSocket (ws) + node-pty
-- **Database**: SQLite (better-sqlite3) at `~/.agent-os/data.db` — used for projects, groups, dev servers, hidden items
+- **Database**: SQLite (better-sqlite3) at `~/.claude-deck/data.db` — used for projects, groups, dev servers, hidden items
 - **Terminal**: xterm.js v6 with CanvasAddon, FitAddon, SearchAddon, WebLinksAddon
 - **Session persistence**: tmux — sessions survive browser disconnects
 - **Package manager**: pnpm
@@ -25,8 +25,8 @@ Agent-OS is a web-based Claude Code session manager. It reads session data from 
 
 ### SQLite Database (Secondary)
 
-- Location: `~/.agent-os/data.db`
-- Used for: agent-os projects, groups, dev servers, worktrees, hidden items
+- Location: `~/.claude-deck/data.db`
+- Used for: claude-deck projects, groups, dev servers, worktrees, hidden items
 - NOT used for session listing (sessions come from JSONL)
 - Schema: `lib/db/schema.ts`, queries: `lib/db/queries.ts`
 
@@ -83,5 +83,5 @@ lib/
 server.ts               Main server: HTTP + WebSocket + PTY
 scripts/
   setup.sh              Development setup
-  agent-os              CLI for install/start/stop
+  claude-deck              CLI for install/start/stop
 ```

@@ -7,7 +7,7 @@ import { appendFileSync } from "fs";
 const execAsync = promisify(exec);
 
 // Log to file for debugging
-const LOG_FILE = "/tmp/agent-os-send-keys.log";
+const LOG_FILE = "/tmp/claude-deck-send-keys.log";
 function log(msg: string) {
   const timestamp = new Date().toISOString();
   const line = `[${timestamp}] ${msg}\n`;
@@ -58,7 +58,7 @@ export async function POST(
     }
 
     // Write text to a temp file
-    const tempFile = `/tmp/agent-os-send-${id}.txt`;
+    const tempFile = `/tmp/claude-deck-send-${id}.txt`;
     const fs = await import("fs/promises");
     await fs.writeFile(tempFile, text);
     log(`Wrote ${text.length} bytes to ${tempFile}`);

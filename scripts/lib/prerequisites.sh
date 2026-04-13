@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prerequisite installation for agent-os
+# Prerequisite installation for claude-deck
 
 # Attempt to source common Node.js version managers
 # This ensures we detect Node even if it's not in the current PATH
@@ -444,10 +444,10 @@ check_and_install_prerequisites() {
 configure_tmux() {
     local tmux_conf="$HOME/.tmux.conf"
     if [ ! -f "$tmux_conf" ] || ! grep -q "mouse on" "$tmux_conf" 2>/dev/null; then
-        log_info "Configuring tmux for Agent-OS..."
+        log_info "Configuring tmux for ClaudeDeck..."
         cat >> "$tmux_conf" << 'TMUX'
 
-# Agent-OS: enable mouse for scroll support in web terminal
+# ClaudeDeck: enable mouse for scroll support in web terminal
 set -g mouse on
 set -g history-limit 50000
 set -g default-terminal "xterm-256color"

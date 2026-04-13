@@ -174,7 +174,7 @@ async function sendToTmux(
   text: string,
   pressEnter = true
 ): Promise<void> {
-  const tempFile = `/tmp/agent-os-send-${Date.now()}.txt`;
+  const tempFile = `/tmp/claude-deck-send-${Date.now()}.txt`;
   const bufferName = `send-${Date.now()}`;
 
   try {

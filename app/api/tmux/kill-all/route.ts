@@ -5,7 +5,7 @@ import { queries, type Session } from "@/lib/db";
 
 const execAsync = promisify(exec);
 
-// POST /api/tmux/kill-all - Kill all AgentOS tmux sessions and remove from database
+// POST /api/tmux/kill-all - Kill all ClaudeDeck tmux sessions and remove from database
 export async function POST() {
   try {
     // Get all tmux sessions

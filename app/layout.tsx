@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgentOS",
+  title: "ClaudeDeck",
   description: "AI Agent Command Center",
   manifest: "/manifest.json",
   icons: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AgentOS",
+    title: "ClaudeDeck",
   },
   other: {
     "mobile-web-app-capable": "yes",

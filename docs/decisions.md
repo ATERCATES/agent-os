@@ -4,7 +4,7 @@
 
 **Decision**: Reverted from PostgreSQL to SQLite (better-sqlite3).
 
-**Why**: Agent-OS is single-user per instance — each instance reads `~/.claude/` from one system user. PostgreSQL adds unnecessary complexity (separate server, connection management, deployment overhead). SQLite with WAL mode is zero-config, stores at `~/.agent-os/data.db`, and is portable.
+**Why**: ClaudeDeck is single-user per instance — each instance reads `~/.claude/` from one system user. PostgreSQL adds unnecessary complexity (separate server, connection management, deployment overhead). SQLite with WAL mode is zero-config, stores at `~/.claude-deck/data.db`, and is portable.
 
 **Trade-off**: No concurrent write scaling, but irrelevant for single-user.
 
@@ -14,7 +14,7 @@
 
 **Why**: Claude Code already creates and manages session data in JSONL files. Duplicating this in a database creates sync issues. The JSONL files are the source of truth.
 
-**What SQLite still handles**: Projects (agent-os managed), groups, dev servers, worktrees, hidden items. These are agent-os features that don't exist in Claude's data model.
+**What SQLite still handles**: Projects (claude-deck managed), groups, dev servers, worktrees, hidden items. These are claude-deck features that don't exist in Claude's data model.
 
 ## tmux for Session Persistence
 

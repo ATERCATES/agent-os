@@ -8,9 +8,9 @@
  * Setup (one-time, in ~/.claude/settings.json or project .mcp.json):
  *   {
  *     "mcpServers": {
- *       "agent-os": {
+ *       "claude-deck": {
  *         "command": "npx",
- *         "args": ["tsx", "/path/to/agent-os/mcp/orchestration-server.ts"],
+ *         "args": ["tsx", "/path/to/claude-deck/mcp/orchestration-server.ts"],
  *         "env": {
  *           "AGENTOS_URL": "http://localhost:3011"
  *         }
@@ -48,7 +48,7 @@ async function apiCall(path: string, options?: RequestInit) {
 
 const server = new Server(
   {
-    name: "agent-os-orchestration",
+    name: "claude-deck-orchestration",
     version: "1.0.0",
   },
   {
@@ -432,7 +432,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Agent-OS Orchestration MCP Server started");
+  console.error("ClaudeDeck Orchestration MCP Server started");
 }
 
 main().catch(console.error);

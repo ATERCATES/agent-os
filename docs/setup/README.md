@@ -1,21 +1,21 @@
-# AgentOS Setup Guide
+# ClaudeDeck Setup Guide
 
-This guide covers installing and running AgentOS on your machine.
+This guide covers installing and running ClaudeDeck on your machine.
 
 ## Quick Install (Recommended)
 
-Run this one-liner to install AgentOS:
+Run this one-liner to install ClaudeDeck:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/saadnvd1/agent-os/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/saadnvd1/claude-deck/main/scripts/install.sh | bash
 ```
 
 The installer will:
 
-1. Download the `agent-os` CLI to your PATH
+1. Download the `claude-deck` CLI to your PATH
 2. Check for prerequisites (Node.js 20+, git, tmux) and offer to install any missing ones
 3. Detect installed AI CLIs or prompt you to install one (Claude Code recommended)
-4. Clone the repository to `~/.agent-os/repo`
+4. Clone the repository to `~/.claude-deck/repo`
 5. Install dependencies and build for production
 
 ## Manual Install
@@ -24,8 +24,8 @@ If you prefer to install manually:
 
 ```bash
 # Clone the repository
-git clone https://github.com/saadnvd1/agent-os ~/.agent-os/repo
-cd ~/.agent-os/repo
+git clone https://github.com/saadnvd1/claude-deck ~/.claude-deck/repo
+cd ~/.claude-deck/repo
 
 # Install dependencies
 npm install
@@ -39,19 +39,19 @@ npm start
 
 ## CLI Commands
 
-After installation, use the `agent-os` command to manage the server:
+After installation, use the `claude-deck` command to manage the server:
 
 | Command              | Description                     |
 | -------------------- | ------------------------------- |
-| `agent-os start`     | Start the server in background  |
-| `agent-os stop`      | Stop the server                 |
-| `agent-os restart`   | Restart the server              |
-| `agent-os status`    | Show status, PID, and URLs      |
-| `agent-os logs`      | Tail server logs                |
-| `agent-os update`    | Pull latest version and rebuild |
-| `agent-os enable`    | Enable auto-start on boot       |
-| `agent-os disable`   | Disable auto-start              |
-| `agent-os uninstall` | Remove AgentOS completely       |
+| `claude-deck start`     | Start the server in background  |
+| `claude-deck stop`      | Stop the server                 |
+| `claude-deck restart`   | Restart the server              |
+| `claude-deck status`    | Show status, PID, and URLs      |
+| `claude-deck logs`      | Tail server logs                |
+| `claude-deck update`    | Pull latest version and rebuild |
+| `claude-deck enable`    | Enable auto-start on boot       |
+| `claude-deck disable`   | Disable auto-start              |
+| `claude-deck uninstall` | Remove ClaudeDeck completely       |
 
 ## Prerequisites
 
@@ -79,15 +79,15 @@ You need at least one AI coding CLI installed. The installer will prompt you to 
 
 | Variable        | Default         | Description            |
 | --------------- | --------------- | ---------------------- |
-| `AGENT_OS_HOME` | `~/.agent-os`   | Installation directory |
+| `AGENT_OS_HOME` | `~/.claude-deck`   | Installation directory |
 | `AGENT_OS_PORT` | `3011`          | Server port            |
-| `DB_PATH`       | `./agent-os.db` | SQLite database path   |
+| `DB_PATH`       | `./claude-deck.db` | SQLite database path   |
 
 ### Custom Port
 
 ```bash
 # Start on a different port
-AGENT_OS_PORT=8080 agent-os start
+AGENT_OS_PORT=8080 claude-deck start
 
 # Or set permanently in your shell config
 export AGENT_OS_PORT=8080
@@ -98,34 +98,34 @@ export AGENT_OS_PORT=8080
 ### macOS (launchd)
 
 ```bash
-agent-os enable
+claude-deck enable
 ```
 
-This creates a Launch Agent at `~/Library/LaunchAgents/com.agent-os.plist`.
+This creates a Launch Agent at `~/Library/LaunchAgents/com.claude-deck.plist`.
 
 To disable:
 
 ```bash
-agent-os disable
+claude-deck disable
 ```
 
 ### Linux (systemd)
 
 ```bash
-agent-os enable
+claude-deck enable
 ```
 
-This creates a user service at `~/.config/systemd/user/agent-os.service`.
+This creates a user service at `~/.config/systemd/user/claude-deck.service`.
 
 To disable:
 
 ```bash
-agent-os disable
+claude-deck disable
 ```
 
 ## Mobile Access with Tailscale
 
-AgentOS is designed for mobile access. The easiest way to access it from your phone is with [Tailscale](https://tailscale.com):
+ClaudeDeck is designed for mobile access. The easiest way to access it from your phone is with [Tailscale](https://tailscale.com):
 
 1. **Install Tailscale on your machine:**
 
@@ -154,27 +154,27 @@ AgentOS is designed for mobile access. The easiest way to access it from your ph
 
 5. **Sign in with the same account**
 
-6. **Access AgentOS:**
+6. **Access ClaudeDeck:**
    ```
    http://100.64.0.1:3011
    ```
 
-The `agent-os status` command will show your Tailscale URL if Tailscale is installed.
+The `claude-deck status` command will show your Tailscale URL if Tailscale is installed.
 
 ## Directory Structure
 
 ```
-~/.agent-os/
-├── repo/              # Cloned AgentOS repository
-├── agent-os.pid       # PID file when running
-├── agent-os.log       # Server logs
-└── agent-os.log.old   # Rotated logs (if > 10MB)
+~/.claude-deck/
+├── repo/              # Cloned ClaudeDeck repository
+├── claude-deck.pid       # PID file when running
+├── claude-deck.log       # Server logs
+└── claude-deck.log.old   # Rotated logs (if > 10MB)
 ```
 
 ## Updating
 
 ```bash
-agent-os update
+claude-deck update
 ```
 
 This will:
@@ -192,20 +192,20 @@ This will:
 Check the logs:
 
 ```bash
-agent-os logs
+claude-deck logs
 ```
 
 Common issues:
 
 - Port already in use: Change `AGENT_OS_PORT`
-- Missing dependencies: Run `agent-os install` again
+- Missing dependencies: Run `claude-deck install` again
 - Node.js version: Ensure Node.js 20+ is installed
 
 ### Can't connect from phone
 
 1. Ensure both devices are on the same Tailscale network
-2. Check `agent-os status` for the correct URL
-3. Verify the server is running: `agent-os status`
+2. Check `claude-deck status` for the correct URL
+3. Verify the server is running: `claude-deck status`
 4. Check firewall settings if not using Tailscale
 
 ### Build fails
@@ -213,25 +213,25 @@ Common issues:
 Try a clean reinstall:
 
 ```bash
-agent-os stop
-rm -rf ~/.agent-os/repo/node_modules
-rm -rf ~/.agent-os/repo/.next
-agent-os install
+claude-deck stop
+rm -rf ~/.claude-deck/repo/node_modules
+rm -rf ~/.claude-deck/repo/.next
+claude-deck install
 ```
 
 ## Uninstalling
 
 ```bash
-agent-os uninstall
+claude-deck uninstall
 ```
 
 This removes:
 
-- The `~/.agent-os` directory
+- The `~/.claude-deck` directory
 - Auto-start configuration (launchd/systemd)
 
-The `agent-os` CLI script itself is not removed. Delete it manually:
+The `claude-deck` CLI script itself is not removed. Delete it manually:
 
 ```bash
-rm $(which agent-os)
+rm $(which claude-deck)
 ```

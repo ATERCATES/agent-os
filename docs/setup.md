@@ -42,7 +42,7 @@ Without `mouse on`, terminal scroll will not work. The setup script creates this
 | Variable   | Default               | Description                         |
 | ---------- | --------------------- | ----------------------------------- |
 | `PORT`     | `3011`                | Server port                         |
-| `DB_PATH`  | `~/.agent-os/data.db` | SQLite database path                |
+| `DB_PATH`  | `~/.claude-deck/data.db` | SQLite database path                |
 | `NODE_ENV` | `development`         | Set to `production` for prod builds |
 
 ## Docker
@@ -59,7 +59,7 @@ The Docker setup:
 
 - Alpine-based with tmux, git, ripgrep, zsh
 - Mounts `~/.claude` read-only (session data)
-- Persists `~/.agent-os` via named volume
+- Persists `~/.claude-deck` via named volume
 - Pre-configures tmux with `mouse on`
 
 **Note**: Claude Code CLI must be available inside the container. The Dockerfile does not install it — mount it or install separately.
@@ -74,10 +74,10 @@ pnpm start
 Or with the CLI:
 
 ```bash
-./scripts/agent-os start      # Background daemon
-./scripts/agent-os stop
-./scripts/agent-os status
-./scripts/agent-os logs
+./scripts/claude-deck start      # Background daemon
+./scripts/claude-deck stop
+./scripts/claude-deck status
+./scripts/claude-deck logs
 ```
 
 ## Mobile Access (PWA)
@@ -97,6 +97,6 @@ allowedDevOrigins: ["192.168.1.x"],
 | Path                  | Purpose                    | Managed By      |
 | --------------------- | -------------------------- | --------------- |
 | `~/.claude/projects/` | Claude session JSONL files | Claude Code CLI |
-| `~/.agent-os/`        | Agent-OS data directory    | Agent-OS        |
-| `~/.agent-os/data.db` | SQLite database            | Agent-OS        |
+| `~/.claude-deck/`        | ClaudeDeck data directory    | ClaudeDeck        |
+| `~/.claude-deck/data.db` | SQLite database            | ClaudeDeck        |
 | `~/.tmux.conf`        | tmux configuration         | setup.sh        |

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# AgentOS Installer
+# ClaudeDeck Installer
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/saadnvd1/agent-os/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/saadnvd1/claude-deck/main/scripts/install.sh | bash
 #
 
 set -e
@@ -19,11 +19,11 @@ log_info() { echo -e "${BLUE}==>${NC} $1"; }
 log_success() { echo -e "${GREEN}==>${NC} $1"; }
 log_error() { echo -e "${RED}==>${NC} $1"; }
 
-REPO_URL="https://github.com/saadnvd1/agent-os.git"
-INSTALL_DIR="$HOME/.agent-os/repo"
+REPO_URL="https://github.com/saadnvd1/claude-deck.git"
+INSTALL_DIR="$HOME/.claude-deck/repo"
 
 echo ""
-echo -e "${BOLD}AgentOS Installer${NC}"
+echo -e "${BOLD}ClaudeDeck Installer${NC}"
 echo ""
 
 # Check for git
@@ -38,11 +38,11 @@ if [[ -d "$INSTALL_DIR" ]]; then
     cd "$INSTALL_DIR"
     git pull --ff-only
 else
-    log_info "Downloading AgentOS..."
+    log_info "Downloading ClaudeDeck..."
     mkdir -p "$(dirname "$INSTALL_DIR")"
     git clone "$REPO_URL" "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 
 # Run the install command
-exec "$INSTALL_DIR/scripts/agent-os" install
+exec "$INSTALL_DIR/scripts/claude-deck" install

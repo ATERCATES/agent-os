@@ -1,6 +1,6 @@
 {
-  "name": "AgentOS",
-  "short_name": "AgentOS",
+  "name": "ClaudeDeck",
+  "short_name": "ClaudeDeck",
   "description": "AI Agent Command Center",
   "start_url": "/",
   "display": "standalone",

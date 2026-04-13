@@ -6,7 +6,7 @@ import { queries, type DevServer, type DevServerType, type DevServerStatus } fro
 
 const execAsync = promisify(exec);
 
-const LOGS_DIR = path.join(process.env.HOME || "~", ".agent-os", "logs");
+const LOGS_DIR = path.join(process.env.HOME || "~", ".claude-deck", "logs");
 
 // Ensure logs directory exists
 if (!fs.existsSync(LOGS_DIR)) {

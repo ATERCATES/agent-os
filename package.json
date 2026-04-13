@@ -1,9 +1,9 @@
 {
-  "name": "@saadnvd1/agent-os",
+  "name": "@saadnvd1/claude-deck",
   "version": "0.2.1",
   "description": "Self-hosted web UI for managing Claude Code sessions",
   "bin": {
-    "agent-os": "./scripts/agent-os"
+    "claude-deck": "./scripts/claude-deck"
   },
   "files": [
     "app/",
@@ -43,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/saadnvd1/agent-os.git"
+    "url": "git+https://github.com/saadnvd1/claude-deck.git"
   },
   "keywords": [
     "claude",
@@ -58,9 +58,9 @@
     "node": ">=20"
   },
   "bugs": {
-    "url": "https://github.com/saadnvd1/agent-os/issues"
+    "url": "https://github.com/saadnvd1/claude-deck/issues"
   },
-  "homepage": "https://github.com/saadnvd1/agent-os#readme",
+  "homepage": "https://github.com/saadnvd1/claude-deck#readme",
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.104",
     "@codemirror/lang-css": "^6.3.1",
