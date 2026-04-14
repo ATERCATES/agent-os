@@ -128,7 +128,7 @@ if [[ "$FLAG_UPDATE" == true ]]; then
   fi
 
   log_info "Installing dependencies..."
-  pnpm install > /dev/null 2>&1
+  pnpm install
 
   log_info "Building..."
   rm -f .next/build.lock
@@ -202,10 +202,7 @@ else
   cd "$INSTALL_DIR"
 fi
 
-# Dependencies
-log_info "Installing dependencies..."
-pnpm install > /dev/null 2>&1
-
+# Approve native builds before first install
 if ! grep -q "onlyBuiltDependencies" package.json 2>/dev/null; then
   node -e "
     const pkg = require('./package.json');
@@ -213,8 +210,11 @@ if ! grep -q "onlyBuiltDependencies" package.json 2>/dev/null; then
     pkg.pnpm.onlyBuiltDependencies = ['better-sqlite3', 'esbuild', 'node-pty', 'sharp'];
     require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
   "
-  pnpm install > /dev/null 2>&1
 fi
+
+# Dependencies
+log_info "Installing dependencies..."
+pnpm install
 
 # .env (preserve existing)
 if [[ ! -f "$INSTALL_DIR/.env" ]]; then
