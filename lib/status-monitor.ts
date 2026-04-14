@@ -20,6 +20,7 @@ import {
 import type { AgentType } from "./providers";
 import { broadcast } from "./claude/watcher";
 import { getDb } from "./db";
+import { getTunnelUrls } from "./tunnels";
 import { STATES_DIR } from "./hooks/setup";
 import { getSessionInfo } from "@anthropic-ai/claude-agent-sdk";
 
@@ -55,6 +56,7 @@ export interface SessionStatusSnapshot {
   claudeSessionId: string | null;
   agentType: AgentType;
   listeningPorts: number[];
+  tunnelUrls: Record<number, string>;
 }
 
 // --- State ---
@@ -238,9 +240,15 @@ async function buildSnapshot(
   );
 
   const db = getDb();
+  const allTunnels = getTunnelUrls();
   for (const { sessionId, tmuxName, name, cwd, ports } of entries) {
     const agentType = getProviderIdFromSessionName(tmuxName) || "claude";
     const state = stateFiles.get(sessionId);
+
+    const tunnelUrls: Record<number, string> = {};
+    for (const port of ports) {
+      if (allTunnels[port]) tunnelUrls[port] = allTunnels[port];
+    }
 
     snap[sessionId] = {
       sessionName: name,
@@ -253,6 +261,7 @@ async function buildSnapshot(
       claudeSessionId: sessionId,
       agentType,
       listeningPorts: ports,
+      tunnelUrls,
     };
 
     try {
@@ -294,7 +303,8 @@ function snapshotChanged(
       p.status !== n.status ||
       p.lastLine !== n.lastLine ||
       p.sessionName !== n.sessionName ||
-      JSON.stringify(p.listeningPorts) !== JSON.stringify(n.listeningPorts)
+      JSON.stringify(p.listeningPorts) !== JSON.stringify(n.listeningPorts) ||
+      JSON.stringify(p.tunnelUrls) !== JSON.stringify(n.tunnelUrls)
     )
       return true;
   }

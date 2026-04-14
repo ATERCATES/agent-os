@@ -1,9 +1,25 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { ChevronRight, Activity, AlertCircle, Moon, Globe } from "lucide-react";
+import {
+  ChevronRight,
+  Activity,
+  AlertCircle,
+  Moon,
+  Globe,
+  Share2,
+  X,
+  Loader2,
+  Copy,
+  Check,
+} from "lucide-react";
 import type { SessionStatus } from "@/components/views/types";
+import {
+  useCloudflaredStatus,
+  useStartTunnel,
+  useStopTunnel,
+} from "@/data/tunnels/queries";
 
 interface ActiveSessionsSectionProps {
   sessionStatuses: Record<string, SessionStatus>;
@@ -37,10 +53,12 @@ export function ActiveSessionsSection({
   const hasWaiting = activeSessions.some((s) => s.status === "waiting");
   const [expanded, setExpanded] = useState(hasWaiting);
 
-  // Auto-expand when a session starts waiting
   useEffect(() => {
     if (hasWaiting) setExpanded(true);
   }, [hasWaiting]);
+
+  const { data: cfStatus } = useCloudflaredStatus();
+  const cloudflaredInstalled = cfStatus?.installed ?? false;
 
   if (activeSessions.length === 0) return null;
 
@@ -94,25 +112,126 @@ export function ActiveSessionsSection({
                 )}
                 {session.listeningPorts &&
                   session.listeningPorts.length > 0 && (
-                    <div className="mt-0.5 flex flex-wrap gap-1">
+                    <div className="mt-0.5 space-y-0.5">
                       {session.listeningPorts.map((port) => (
-                        <a
+                        <PortBadge
                           key={port}
-                          href={`http://localhost:${port}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-0.5 rounded bg-sky-500/15 px-1.5 py-0.5 font-mono text-[10px] text-sky-400 transition-colors hover:bg-sky-500/25"
-                        >
-                          <Globe className="h-2.5 w-2.5" />
-                          {port}
-                        </a>
+                          port={port}
+                          tunnelUrl={session.tunnelUrls?.[port]}
+                          cloudflaredInstalled={cloudflaredInstalled}
+                        />
                       ))}
                     </div>
                   )}
               </div>
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PortBadge({
+  port,
+  tunnelUrl,
+  cloudflaredInstalled,
+}: {
+  port: number;
+  tunnelUrl?: string;
+  cloudflaredInstalled: boolean;
+}) {
+  const startTunnel = useStartTunnel();
+  const stopTunnel = useStopTunnel();
+  const [copied, setCopied] = useState(false);
+
+  const isStarting = startTunnel.isPending;
+  const hasTunnel = !!tunnelUrl;
+
+  const handleShare = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (hasTunnel) {
+        stopTunnel.mutate(port);
+      } else {
+        startTunnel.mutate(port);
+      }
+    },
+    [hasTunnel, port, startTunnel, stopTunnel]
+  );
+
+  const handleCopy = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (tunnelUrl) {
+        navigator.clipboard.writeText(tunnelUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    },
+    [tunnelUrl]
+  );
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="flex items-center gap-1">
+        <a
+          href={`http://localhost:${port}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-0.5 rounded bg-sky-500/15 px-1.5 py-0.5 font-mono text-[10px] text-sky-400 transition-colors hover:bg-sky-500/25"
+        >
+          <Globe className="h-2.5 w-2.5" />
+          {port}
+        </a>
+        {cloudflaredInstalled && (
+          <button
+            onClick={handleShare}
+            disabled={isStarting}
+            className={cn(
+              "rounded p-0.5 transition-colors",
+              hasTunnel
+                ? "text-emerald-400 hover:bg-emerald-500/20"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            title={hasTunnel ? "Stop sharing" : "Share via tunnel"}
+          >
+            {isStarting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : hasTunnel ? (
+              <X className="h-3 w-3" />
+            ) : (
+              <Share2 className="h-3 w-3" />
+            )}
+          </button>
+        )}
+      </div>
+      {tunnelUrl && (
+        <div className="flex items-center gap-1">
+          <a
+            href={tunnelUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex max-w-[180px] items-center gap-0.5 truncate rounded bg-emerald-500/15 px-1.5 py-0.5 font-mono text-[10px] text-emerald-400 transition-colors hover:bg-emerald-500/25"
+          >
+            <Globe className="h-2.5 w-2.5 flex-shrink-0" />
+            {tunnelUrl
+              .replace("https://", "")
+              .replace(".trycloudflare.com", "")}
+          </a>
+          <button
+            onClick={handleCopy}
+            className="text-muted-foreground hover:text-foreground rounded p-0.5 transition-colors"
+            title="Copy URL"
+          >
+            {copied ? (
+              <Check className="h-3 w-3 text-emerald-400" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+          </button>
         </div>
       )}
     </div>

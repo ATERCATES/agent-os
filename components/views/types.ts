@@ -11,6 +11,7 @@ export interface SessionStatus {
   waitingContext?: string;
   claudeSessionId?: string | null;
   listeningPorts?: number[];
+  tunnelUrls?: Record<number, string>;
 }
 
 export interface ViewProps {

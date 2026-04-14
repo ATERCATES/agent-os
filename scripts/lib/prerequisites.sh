@@ -388,6 +388,72 @@ install_ripgrep() {
     esac
 }
 
+check_cloudflared() {
+    if command -v cloudflared &> /dev/null; then
+        local cf_path=$(command -v cloudflared)
+        local cf_version=$(cloudflared --version 2>/dev/null | awk '{print $2}' || echo "unknown")
+        log_success "Found cloudflared $cf_version at $cf_path"
+        return 0
+    fi
+
+    source_node_managers
+
+    if command -v cloudflared &> /dev/null; then
+        local cf_path=$(command -v cloudflared)
+        local cf_version=$(cloudflared --version 2>/dev/null | awk '{print $2}' || echo "unknown")
+        log_success "Found cloudflared $cf_version at $cf_path"
+        return 0
+    fi
+
+    return 1
+}
+
+install_cloudflared() {
+    if command -v cloudflared &> /dev/null; then
+        return 0
+    fi
+
+    log_info "Installing cloudflared (Cloudflare Tunnel)..."
+
+    case "$OS" in
+        macos)
+            if ! groups | grep -q admin; then
+                log_info "Non-admin user - downloading pre-built cloudflared binary"
+                local arch
+                arch=$(uname -m)
+                local url
+                if [[ "$arch" == "arm64" ]]; then
+                    url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz"
+                else
+                    url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz"
+                fi
+
+                mkdir -p "$HOME/.local/bin"
+                curl -fsSL "$url" | tar -xz -C "$HOME/.local/bin"
+                chmod +x "$HOME/.local/bin/cloudflared"
+                export PATH="$HOME/.local/bin:$PATH"
+                log_success "cloudflared installed to ~/.local/bin/cloudflared"
+            else
+                install_homebrew
+                brew install cloudflared
+            fi
+            ;;
+        debian)
+            curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+            echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
+            sudo apt-get update
+            sudo apt-get install -y cloudflared
+            ;;
+        redhat)
+            sudo rpm -i "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-x86_64.rpm" 2>/dev/null || true
+            ;;
+        *)
+            log_warn "Please install cloudflared manually: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/"
+            return 1
+            ;;
+    esac
+}
+
 check_and_install_prerequisites() {
     log_info "Checking prerequisites..."
 
@@ -415,30 +481,39 @@ check_and_install_prerequisites() {
 
     if [[ ${#missing[@]} -eq 0 ]]; then
         log_success "All prerequisites met"
-        return 0
-    fi
+    else
+        log_warn "Missing prerequisites: ${missing[*]}"
 
-    log_warn "Missing prerequisites: ${missing[*]}"
-
-    if is_interactive; then
-        if ! prompt_yn "Install missing prerequisites?"; then
-            log_error "Please install manually: ${missing[*]}"
-            exit 1
+        if is_interactive; then
+            if ! prompt_yn "Install missing prerequisites?"; then
+                log_error "Please install manually: ${missing[*]}"
+                exit 1
+            fi
         fi
+
+        for dep in "${missing[@]}"; do
+            case "$dep" in
+                node) install_node ;;
+                git) install_git ;;
+                tmux) install_tmux ;;
+                ripgrep) install_ripgrep ;;
+            esac
+        done
+
+        log_success "Prerequisites installed"
     fi
-
-    for dep in "${missing[@]}"; do
-        case "$dep" in
-            node) install_node ;;
-            git) install_git ;;
-            tmux) install_tmux ;;
-            ripgrep) install_ripgrep ;;
-        esac
-    done
-
-    log_success "Prerequisites installed"
 
     configure_tmux
+
+    # Optional: cloudflared for tunnel sharing
+    if ! check_cloudflared; then
+        log_info "cloudflared not found (optional - enables port sharing via Cloudflare Tunnel)"
+        if is_interactive; then
+            if prompt_yn "Install cloudflared for tunnel sharing?"; then
+                install_cloudflared
+            fi
+        fi
+    fi
 }
 
 configure_tmux() {

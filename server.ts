@@ -13,6 +13,7 @@ import {
   COOKIE_NAME,
   hasUsers,
 } from "./lib/auth";
+import { stopAllTunnels } from "./lib/tunnels";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOST || (dev ? "localhost" : "0.0.0.0");
@@ -221,6 +222,13 @@ app.prepare().then(async () => {
   setupHooks();
   startWatcher();
   startStatusMonitor();
+
+  const shutdown = () => {
+    stopAllTunnels();
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 
   server.listen(port, () => {
     console.log(`> ClaudeDeck ready on http://${hostname}:${port}`);
