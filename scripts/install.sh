@@ -28,7 +28,7 @@ log_warn()    { echo -e "${YELLOW}==>${NC} $1"; }
 log_error()   { echo -e "${RED}==>${NC} $1"; }
 
 INSTALL_DIR="$HOME/.claude-deck"
-PKG="@atercates/claude-deck"
+REPO_URL="https://github.com/ATERCATES/claude-deck.git"
 NODE_MIN=24
 
 # ─── Parse flags ──────────────────────────────────────────────────────────────
@@ -65,7 +65,6 @@ ask() {
 }
 
 ensure_node() {
-  # Check PATH first, then ~/.n
   [[ -x "$HOME/.n/bin/node" ]] && export PATH="$HOME/.n/bin:$PATH"
 
   if command -v node &> /dev/null; then
@@ -95,12 +94,8 @@ ensure_pnpm() {
   fi
 }
 
-pkg_dir() {
-  echo "$INSTALL_DIR/node_modules/$PKG"
-}
-
-pkg_version() {
-  node -e "console.log(require('$(pkg_dir)/package.json').version)" 2>/dev/null || echo "unknown"
+app_version() {
+  node -e "console.log(require('$INSTALL_DIR/package.json').version)" 2>/dev/null || echo "unknown"
 }
 
 # ─── Update ───────────────────────────────────────────────────────────────────
@@ -110,28 +105,28 @@ if [[ "$FLAG_UPDATE" == true ]]; then
   echo -e "${BOLD}  ClaudeDeck Update${NC}"
   echo ""
 
-  if [[ ! -d "$INSTALL_DIR/node_modules/$PKG" ]]; then
+  if [[ ! -d "$INSTALL_DIR/.git" ]]; then
     log_error "ClaudeDeck is not installed. Run without --update first."
     exit 1
   fi
 
   ensure_node
+  ensure_pnpm
   cd "$INSTALL_DIR"
 
-  CURRENT=$(pkg_version)
+  CURRENT=$(app_version)
   log_info "Current version: $CURRENT"
 
-  log_info "Updating..."
-  pnpm update "$PKG" --latest 2>&1 | tail -3
+  log_info "Pulling latest..."
+  git pull --ff-only
 
-  NEW=$(pkg_version)
+  NEW=$(app_version)
   if [[ "$CURRENT" == "$NEW" ]]; then
     log_success "Already on latest version ($NEW)"
   else
     log_success "Updated: $CURRENT -> $NEW"
   fi
 
-  cd "$(pkg_dir)"
   log_info "Installing dependencies..."
   pnpm install > /dev/null 2>&1
 
@@ -162,6 +157,11 @@ echo ""
 # Prerequisites
 log_info "Checking prerequisites..."
 
+if ! command -v git &> /dev/null; then
+  log_error "git is required. Install it with: sudo apt install git"
+  exit 1
+fi
+
 if ! command -v tmux &> /dev/null; then
   log_warn "tmux is not installed (required for session management)"
   ask "Install tmux now? (y/n)" "y" INSTALL_TMUX
@@ -191,20 +191,18 @@ ask "SSH host for VS Code remote button (leave empty to skip)" "" SSH_HOST
 [[ -n "$SSH_HOST" ]] && ask "SSH port" "22" SSH_PORT
 echo ""
 
-# Install package
-mkdir -p "$INSTALL_DIR"
-cd "$INSTALL_DIR"
-
-if [[ ! -f "package.json" ]]; then
-  echo '{"name":"claude-deck-instance","private":true}' > package.json
+# Clone or update repo
+if [[ -d "$INSTALL_DIR/.git" ]]; then
+  log_info "Updating existing installation..."
+  cd "$INSTALL_DIR"
+  git pull --ff-only
+else
+  log_info "Downloading ClaudeDeck..."
+  git clone "$REPO_URL" "$INSTALL_DIR"
+  cd "$INSTALL_DIR"
 fi
 
-log_info "Installing $PKG from npm..."
-pnpm add "$PKG" 2>&1 | tail -3
-
-# Build inside the package directory
-cd "$(pkg_dir)"
-
+# Dependencies
 log_info "Installing dependencies..."
 pnpm install > /dev/null 2>&1
 
@@ -218,12 +216,15 @@ if ! grep -q "onlyBuiltDependencies" package.json 2>/dev/null; then
   pnpm install > /dev/null 2>&1
 fi
 
-# .env
-log_info "Writing .env..."
-ENV_FILE="$(pkg_dir)/.env"
-echo "PORT=$PORT" > "$ENV_FILE"
-[[ -n "$SSH_HOST" ]] && echo "SSH_HOST=$SSH_HOST" >> "$ENV_FILE"
-[[ -n "$SSH_PORT" && "$SSH_PORT" != "22" ]] && echo "SSH_PORT=$SSH_PORT" >> "$ENV_FILE"
+# .env (preserve existing)
+if [[ ! -f "$INSTALL_DIR/.env" ]]; then
+  log_info "Writing .env..."
+  echo "PORT=$PORT" > "$INSTALL_DIR/.env"
+  [[ -n "$SSH_HOST" ]] && echo "SSH_HOST=$SSH_HOST" >> "$INSTALL_DIR/.env"
+  [[ -n "$SSH_PORT" && "$SSH_PORT" != "22" ]] && echo "SSH_PORT=$SSH_PORT" >> "$INSTALL_DIR/.env"
+else
+  log_success ".env already exists, keeping current config"
+fi
 
 # Build
 log_info "Building for production (this may take a minute)..."
@@ -235,14 +236,10 @@ if [[ ! -f "$HOME/.tmux.conf" ]] || ! grep -q "mouse on" "$HOME/.tmux.conf" 2>/d
   echo "set -g mouse on" >> "$HOME/.tmux.conf"
 fi
 
-# Copy install script for easy updates
-cp "$(pkg_dir)/scripts/install.sh" "$INSTALL_DIR/install.sh" 2>/dev/null || true
-
 # ─── Systemd ──────────────────────────────────────────────────────────────────
 
-APP_DIR="$(pkg_dir)"
 NODE_BIN=$(which node)
-TSX_BIN="$APP_DIR/node_modules/.bin/tsx"
+TSX_BIN="$INSTALL_DIR/node_modules/.bin/tsx"
 
 SERVICE="[Unit]
 Description=ClaudeDeck
@@ -251,9 +248,9 @@ After=network.target
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=$APP_DIR
+WorkingDirectory=$INSTALL_DIR
 Environment=NODE_ENV=production
-Environment=PATH=$(dirname "$NODE_BIN"):$APP_DIR/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PATH=$(dirname "$NODE_BIN"):$INSTALL_DIR/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=$TSX_BIN --env-file=.env server.ts
 Restart=on-failure
 RestartSec=5
@@ -282,7 +279,7 @@ fi
 
 # ─── Done ─────────────────────────────────────────────────────────────────────
 
-VERSION=$(pkg_version)
+VERSION=$(app_version)
 
 echo ""
 echo -e "${GREEN}${BOLD}  ClaudeDeck${VERSION:+ v$VERSION} installed!${NC}"
@@ -292,5 +289,5 @@ echo -e "  ${BOLD}Local:${NC}    http://localhost:$PORT"
 echo ""
 echo -e "  ${DIM}First visit will prompt you to create an account.${NC}"
 echo -e "  ${DIM}Manage:  sudo systemctl {start|stop|restart|status} claudedeck${NC}"
-echo -e "  ${DIM}Update:  ~/.claude-deck/install.sh --update${NC}"
+echo -e "  ${DIM}Update:  ~/.claude-deck/scripts/install.sh --update${NC}"
 echo ""
