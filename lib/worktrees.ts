@@ -112,15 +112,11 @@ export async function createWorktree(
       );
       lastError = null;
 
-      // Init submodules if present, then checkout their tracking branches
+      // Init submodules if present
       if (fs.existsSync(path.join(worktreePath, ".gitmodules"))) {
         await execAsync(
           `git -C "${worktreePath}" submodule update --init --recursive`,
           { timeout: 120000 }
-        );
-        await execAsync(
-          `git -C "${worktreePath}" submodule foreach --recursive 'git checkout $(git config -f "$toplevel/.gitmodules" --get "submodule.$name.branch" || git rev-parse --abbrev-ref origin/HEAD | sed "s|origin/||") 2>/dev/null || true'`,
-          { timeout: 30000 }
         );
       }
 
