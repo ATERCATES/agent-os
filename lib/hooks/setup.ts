@@ -19,8 +19,8 @@ const SETTINGS_PATH = path.join(os.homedir(), ".claude", "settings.json");
 const HOOK_EVENTS: Array<{ event: string; async: boolean }> = [
   { event: "UserPromptSubmit", async: true },
   { event: "PreToolUse", async: true },
-  { event: "PermissionRequest", async: false },
-  { event: "Elicitation", async: false },
+  { event: "PermissionRequest", async: true },
+  { event: "Elicitation", async: true },
   { event: "Stop", async: true },
   { event: "SessionStart", async: true },
   { event: "SessionEnd", async: true },
@@ -119,26 +119,32 @@ function mergeHooksIntoSettings(): void {
 
   let changed = false;
 
-  for (const { event, async: isAsync } of HOOK_EVENTS) {
+  for (const { event } of HOOK_EVENTS) {
     if (!settings.hooks[event]) {
       settings.hooks[event] = [];
     }
 
     const eventHooks = settings.hooks[event];
-    const alreadyInstalled = eventHooks.some((matcher) =>
+    const existingIdx = eventHooks.findIndex((matcher) =>
       matcher.hooks?.some((h) => isOurHook(h))
     );
 
-    if (!alreadyInstalled) {
+    if (existingIdx === -1) {
       const hookDef: HookCommand = {
         type: "command",
         command: REPORTER_PATH,
+        async: true,
       };
-      if (isAsync) {
-        hookDef.async = true;
-      }
       eventHooks.push({ hooks: [hookDef] });
       changed = true;
+    } else {
+      // Ensure existing hook is async
+      for (const h of eventHooks[existingIdx].hooks) {
+        if (isOurHook(h) && !h.async) {
+          h.async = true;
+          changed = true;
+        }
+      }
     }
   }
 
