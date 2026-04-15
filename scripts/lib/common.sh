@@ -65,7 +65,7 @@ prompt_yn() {
 
 # Process management helpers
 get_pid() {
-    local pid_file="$AGENT_OS_HOME/claude-deck.pid"
+    local pid_file="$CLAUDE_DECK_HOME/claude-deck.pid"
     if [[ -f "$pid_file" ]]; then
         local pid
         pid=$(cat "$pid_file")

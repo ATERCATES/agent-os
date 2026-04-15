@@ -62,35 +62,32 @@ The installer can automatically install these on macOS and Linux:
 - **git** - Version control
 - **tmux** - Terminal multiplexer for session management
 
-### AI Coding CLIs
+### Claude Code
 
-You need at least one AI coding CLI installed. The installer will prompt you to choose:
+ClaudeDeck requires Claude Code installed:
 
-| CLI         | Provider  | Install Command                            |
-| ----------- | --------- | ------------------------------------------ |
-| Claude Code | Anthropic | `npm install -g @anthropic-ai/claude-code` |
-| Codex       | OpenAI    | `npm install -g @openai/codex`             |
-| Aider       | Multi-LLM | `pip install aider-chat`                   |
-| Gemini CLI  | Google    | `npm install -g gemini-cli`                |
+```bash
+npm install -g @anthropic-ai/claude-code
+```
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable        | Default            | Description            |
-| --------------- | ------------------ | ---------------------- |
-| `AGENT_OS_HOME` | `~/.claude-deck`   | Installation directory |
-| `AGENT_OS_PORT` | `3011`             | Server port            |
-| `DB_PATH`       | `./claude-deck.db` | SQLite database path   |
+| Variable           | Default            | Description            |
+| ------------------ | ------------------ | ---------------------- |
+| `CLAUDE_DECK_HOME` | `~/.claude-deck`   | Installation directory |
+| `CLAUDE_DECK_PORT` | `3011`             | Server port            |
+| `DB_PATH`          | `./claude-deck.db` | SQLite database path   |
 
 ### Custom Port
 
 ```bash
 # Start on a different port
-AGENT_OS_PORT=8080 claude-deck start
+CLAUDE_DECK_PORT=8080 claude-deck start
 
 # Or set permanently in your shell config
-export AGENT_OS_PORT=8080
+export CLAUDE_DECK_PORT=8080
 ```
 
 ## Auto-Start on Boot
@@ -197,7 +194,7 @@ claude-deck logs
 
 Common issues:
 
-- Port already in use: Change `AGENT_OS_PORT`
+- Port already in use: Change `CLAUDE_DECK_PORT`
 - Missing dependencies: Run `claude-deck install` again
 - Node.js version: Ensure Node.js 24+ is installed
 

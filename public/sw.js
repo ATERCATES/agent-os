@@ -1,4 +1,4 @@
-const CACHE_NAME = "agent-os-v1";
+const CACHE_NAME = "claude-deck-v1";
 const urlsToCache = ["/manifest.json"];
 
 self.addEventListener("install", (event) => {

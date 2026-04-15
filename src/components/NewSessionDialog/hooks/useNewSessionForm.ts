@@ -1,0 +1,247 @@
+import { useState, useEffect, useCallback } from "react";
+import type { AgentType } from "@/lib/providers";
+import { setPendingPrompt } from "@/stores/initialPrompt";
+import { useCreateSession } from "@/data/sessions";
+import {
+  type GitInfo,
+  SKIP_PERMISSIONS_KEY,
+  RECENT_DIRS_KEY,
+  USE_TMUX_KEY,
+  MAX_RECENT_DIRS,
+  generateFeatureName,
+} from "../NewSessionDialog.types";
+
+interface UseNewSessionFormOptions {
+  open: boolean;
+  selectedProjectId?: string;
+  onCreated: (sessionId: string) => void;
+  onClose: () => void;
+}
+
+export function useNewSessionForm({
+  open: _open,
+  selectedProjectId: _selectedProjectId,
+  onCreated,
+  onClose,
+}: UseNewSessionFormOptions) {
+  // React Query mutation
+  const createSession = useCreateSession();
+
+  // Form state
+  const [name, setName] = useState("");
+  const [workingDirectory, setWorkingDirectory] = useState("~");
+  const [skipPermissions, setSkipPermissions] = useState(false);
+  const [useTmux, setUseTmux] = useState(true);
+  const [initialPrompt, setInitialPrompt] = useState("");
+
+  // Worktree state
+  const [useWorktree, setUseWorktree] = useState(false);
+  const [featureName, setFeatureName] = useState("");
+  const [baseBranch, setBaseBranch] = useState("main");
+  const [gitInfo, setGitInfo] = useState<GitInfo | null>(null);
+  const [checkingGit, setCheckingGit] = useState(false);
+
+  // UI state
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [showDirectoryPicker, setShowDirectoryPicker] = useState(false);
+
+  // Creation step for loading overlay
+  const [creationStep, setCreationStep] = useState<
+    "creating" | "worktree" | "setup" | "done"
+  >("creating");
+
+  // Recent directories
+  const [recentDirs, setRecentDirs] = useState<string[]>([]);
+
+  // Check if working directory is a git repo
+  const checkGitRepo = useCallback(async (path: string) => {
+    if (!path || path === "~") {
+      setGitInfo(null);
+      setUseWorktree(false);
+      setFeatureName("");
+      return;
+    }
+
+    setCheckingGit(true);
+    try {
+      const res = await fetch("/api/git/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+      });
+      const data = await res.json();
+      setGitInfo(data);
+      if (data.defaultBranch) {
+        setBaseBranch(data.defaultBranch);
+      }
+      if (data.isGitRepo) {
+        setUseWorktree(true);
+        setFeatureName(generateFeatureName());
+      } else {
+        setUseWorktree(false);
+        setFeatureName("");
+      }
+    } catch {
+      setGitInfo(null);
+      setUseWorktree(false);
+      setFeatureName("");
+    } finally {
+      setCheckingGit(false);
+    }
+  }, []);
+
+  // Debounce git check
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkGitRepo(workingDirectory);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [workingDirectory, checkGitRepo]);
+
+  // Load preferences from localStorage
+  useEffect(() => {
+    const savedSkipPerms = localStorage.getItem(SKIP_PERMISSIONS_KEY);
+    if (savedSkipPerms !== null) {
+      setSkipPermissions(savedSkipPerms === "true");
+    }
+    const savedUseTmux = localStorage.getItem(USE_TMUX_KEY);
+    if (savedUseTmux !== null) {
+      setUseTmux(savedUseTmux === "true");
+    }
+    try {
+      const saved = localStorage.getItem(RECENT_DIRS_KEY);
+      if (saved) {
+        setRecentDirs(JSON.parse(saved));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // Save directory to recent list
+  const addRecentDirectory = useCallback((dir: string) => {
+    if (!dir || dir === "~") return;
+    setRecentDirs((prev) => {
+      const filtered = prev.filter((d) => d !== dir);
+      const updated = [dir, ...filtered].slice(0, MAX_RECENT_DIRS);
+      localStorage.setItem(RECENT_DIRS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  // Handlers
+  const handleSkipPermissionsChange = (checked: boolean) => {
+    setSkipPermissions(checked);
+    localStorage.setItem(SKIP_PERMISSIONS_KEY, String(checked));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    createSession.reset(); // Clear any previous errors
+
+    if (useWorktree) {
+      if (!featureName.trim()) {
+        return; // Validation handled by button disabled state
+      }
+      if (!gitInfo?.isGitRepo) {
+        return;
+      }
+    }
+
+    setCreationStep("creating");
+
+    // For worktree sessions, show step progression
+    let stepTimer: NodeJS.Timeout | undefined;
+    if (useWorktree) {
+      setCreationStep("worktree");
+      // Progress to "setup" step after 2s (worktree creation is usually fast)
+      stepTimer = setTimeout(() => {
+        setCreationStep("setup");
+      }, 2000);
+    }
+
+    createSession.mutate(
+      {
+        name: name.trim() || undefined,
+        workingDirectory,
+        agentType: "claude" as AgentType,
+        useWorktree,
+        featureName: useWorktree ? featureName.trim() : null,
+        baseBranch: useWorktree ? baseBranch : null,
+        autoApprove: skipPermissions,
+        useTmux,
+        initialPrompt: initialPrompt.trim() || null,
+      },
+      {
+        onSuccess: (data) => {
+          if (stepTimer) clearTimeout(stepTimer);
+          setCreationStep("done");
+          if (data.initialPrompt) {
+            setPendingPrompt(data.session.id, data.initialPrompt);
+          }
+          addRecentDirectory(workingDirectory);
+          // Small delay to show "done" state before closing
+          setTimeout(() => {
+            resetForm();
+            onCreated(data.session.id);
+          }, 300);
+        },
+        onError: () => {
+          if (stepTimer) clearTimeout(stepTimer);
+          setCreationStep("creating");
+        },
+      }
+    );
+  };
+
+  const resetForm = () => {
+    setName("");
+    setWorkingDirectory("~");
+    setUseWorktree(false);
+    setFeatureName("");
+    setInitialPrompt("");
+    setCreationStep("creating");
+    createSession.reset();
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  return {
+    // Form values
+    name,
+    setName,
+    workingDirectory,
+    setWorkingDirectory,
+    skipPermissions,
+    useTmux,
+    initialPrompt,
+    setInitialPrompt,
+    // Worktree
+    useWorktree,
+    setUseWorktree,
+    featureName,
+    setFeatureName,
+    baseBranch,
+    setBaseBranch,
+    gitInfo,
+    checkingGit,
+    // UI
+    advancedOpen,
+    setAdvancedOpen,
+    showDirectoryPicker,
+    setShowDirectoryPicker,
+    // Submission
+    isLoading: createSession.isPending,
+    creationStep,
+    error: createSession.error?.message ?? null,
+    // Recent
+    recentDirs,
+    // Handlers
+    handleSkipPermissionsChange,
+    handleSubmit,
+    handleClose,
+  };
+}

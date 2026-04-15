@@ -57,3 +57,11 @@
 **Decision**: Button generates `vscode://` URI instead of running code-server.
 
 **Why**: Zero server-side dependencies. If the user has VS Code + Remote SSH extension, it works immediately. The URI includes the SSH user (from `/api/system`) and the session's working directory.
+
+### Message History — kept as dormant infrastructure (April 2025)
+
+The backend is complete: `getSessionMessages()` reads JSONL, the `/api/sessions/[id]/messages` endpoint returns paginated messages, and `ChatView`/`ChatMessage` components can render them. However, no React Query hook consumes the endpoint and no tab in the UI displays the view. The feature was never connected to the frontend.
+
+**Decision:** keep the infrastructure. The backend reads Claude's native JSONL format (no custom storage), the API is correct, and the components are functional. Connecting them requires only a query hook and a tab in the Pane component. Removing them would save nothing meaningful and require rebuilding from scratch later.
+
+**Files:** `src/lib/claude/jsonl-reader.ts` (getSessionMessages), `src/app/api/sessions/[id]/messages/route.ts`, `src/components/ChatView.tsx`, `src/components/ChatMessage.tsx`

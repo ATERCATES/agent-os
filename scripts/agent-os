@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #
-# AgentOS - Self-hosted AI coding session manager
-# https://github.com/anthropics/agent-os
+# ClaudeDeck - Self-hosted AI coding session manager
+# https://github.com/ATERCATES/claude-deck
 #
 
 set -euo pipefail
 
 # Configuration
-AGENT_OS_HOME="${AGENT_OS_HOME:-$HOME/.agent-os}"
-PORT="${AGENT_OS_PORT:-3011}"
-REPO_URL="https://github.com/ATERCATES/agent-os.git"
+CLAUDE_DECK_HOME="${CLAUDE_DECK_HOME:-$HOME/.claude-deck}"
+PORT="${CLAUDE_DECK_PORT:-3011}"
+REPO_URL="https://github.com/ATERCATES/claude-deck.git"
 
 # Derived paths
-REPO_DIR="$AGENT_OS_HOME/repo"
-PID_FILE="$AGENT_OS_HOME/agent-os.pid"
-LOG_FILE="$AGENT_OS_HOME/agent-os.log"
+REPO_DIR="$CLAUDE_DECK_HOME/repo"
+PID_FILE="$CLAUDE_DECK_HOME/claude-deck.pid"
+LOG_FILE="$CLAUDE_DECK_HOME/claude-deck.log"
 
 # Detect OS
 OS=$(uname -s | tr '[:upper:]' '[:lower:]')

@@ -15,7 +15,7 @@ cmd_install() {
     prompt_ai_cli_install
 
     # Create directory structure
-    mkdir -p "$AGENT_OS_HOME"
+    mkdir -p "$CLAUDE_DECK_HOME"
 
     # Clone, copy local, or update repo
     if [[ -d "$REPO_DIR" ]]; then
@@ -432,9 +432,9 @@ cmd_uninstall() {
     fi
 
     # Remove installation directory
-    if [[ -d "$AGENT_OS_HOME" ]]; then
-        log_info "Removing $AGENT_OS_HOME..."
-        rm -rf "$AGENT_OS_HOME"
+    if [[ -d "$CLAUDE_DECK_HOME" ]]; then
+        log_info "Removing $CLAUDE_DECK_HOME..."
+        rm -rf "$CLAUDE_DECK_HOME"
     fi
 
     log_success "ClaudeDeck uninstalled"
@@ -481,7 +481,7 @@ cmd_help() {
     echo "  uninstall   Remove ClaudeDeck completely"
     echo ""
     echo "Environment variables:"
-    echo "  AGENT_OS_HOME   Installation directory (default: ~/.claude-deck)"
-    echo "  AGENT_OS_PORT   Server port (default: 3011)"
+    echo "  CLAUDE_DECK_HOME   Installation directory (default: ~/.claude-deck)"
+    echo "  CLAUDE_DECK_PORT   Server port (default: 3011)"
     echo ""
 }

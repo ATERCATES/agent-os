@@ -1,14 +1,14 @@
 services:
-  agent-os:
+  claude-deck:
     build: .
     ports:
       - "${PORT:-3011}:3011"
     volumes:
       - ${HOME}/.claude:/root/.claude:ro
-      - agent-os-data:/root/.agent-os
+      - claude-deck-data:/root/.claude-deck
     environment:
       - PORT=3011
     restart: unless-stopped
 
 volumes:
-  agent-os-data:
+  claude-deck-data:
