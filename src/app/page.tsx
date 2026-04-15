@@ -29,7 +29,7 @@ import { useViewport } from "@/hooks/useViewport";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { useSessions } from "@/hooks/useSessions";
 import { useDevServersManager } from "@/hooks/useDevServersManager";
-import { useSessionStatuses } from "@/hooks/useSessionStatuses";
+import { useSessionStatusesQuery } from "@/data/statuses";
 import type { Session } from "@/lib/db";
 import type { TerminalHandle } from "@/components/Terminal";
 import { CLAUDE_COMMAND, buildClaudeFlags } from "@/lib/providers";
@@ -464,7 +464,7 @@ function HomeContent() {
   } = useNotifications({ onSessionClick: handleNotificationClick });
 
   // Session statuses
-  const { sessionStatuses } = useSessionStatuses({
+  const { sessionStatuses } = useSessionStatusesQuery({
     sessions,
     activeSessionId: focusedActiveTab?.sessionId,
     checkStateChanges,

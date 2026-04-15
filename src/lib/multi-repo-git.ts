@@ -156,30 +156,3 @@ export function getMultiRepoGitStatus(
 
   return result;
 }
-
-/**
- * Group files by repository
- */
-export function groupFilesByRepo(
-  files: MultiRepoGitFile[]
-): Map<string, MultiRepoGitFile[]> {
-  const grouped = new Map<string, MultiRepoGitFile[]>();
-
-  for (const file of files) {
-    const existing = grouped.get(file.repoId) || [];
-    existing.push(file);
-    grouped.set(file.repoId, existing);
-  }
-
-  return grouped;
-}
-
-/**
- * Get repositories with staged changes
- */
-export function getReposWithStagedChanges(
-  status: MultiRepoGitStatus
-): RepositoryStatus[] {
-  const repoIds = new Set(status.staged.map((f) => f.repoId));
-  return status.repositories.filter((r) => repoIds.has(r.id));
-}

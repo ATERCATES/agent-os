@@ -20,16 +20,3 @@ export function runInBackground(task: BackgroundTask, taskName: string): void {
     console.error(`[Background Task: ${taskName}] Error:`, error);
   });
 }
-
-/**
- * Run multiple tasks in parallel in the background.
- * All tasks run concurrently for speed.
- */
-export function runManyInBackground(
-  tasks: BackgroundTask[],
-  taskName: string
-): void {
-  Promise.all(tasks.map((task) => task())).catch((error) => {
-    console.error(`[Background Tasks: ${taskName}] Error:`, error);
-  });
-}

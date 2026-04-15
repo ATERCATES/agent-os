@@ -399,11 +399,6 @@ export function getStatusSnapshot(): Record<string, SessionStatusSnapshot> {
   return currentSnapshot;
 }
 
-export function acknowledge(_sessionName: string): void {
-  // With hook-based detection, acknowledge is a no-op.
-  // Status is determined by Claude Code's hook events, not by us.
-}
-
 /**
  * Called by Chokidar when a state file in ~/.claude-deck/session-states/ changes.
  * Triggers an immediate re-read and broadcast.

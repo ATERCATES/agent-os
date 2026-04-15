@@ -1,4 +1,4 @@
-export { sessionKeys, statusKeys } from "./keys";
+export { sessionKeys } from "./keys";
 export {
   useSessionsQuery,
   useCreateSession,

@@ -1,5 +1,3 @@
-import type { AgentType } from "@/lib/providers";
-
 // LocalStorage keys
 export const SKIP_PERMISSIONS_KEY = "agentOS:skipPermissions";
 export const RECENT_DIRS_KEY = "agentOS:recentDirectories";
@@ -88,31 +86,4 @@ export interface NewSessionDialogProps {
   selectedProjectId?: string;
   onClose: () => void;
   onCreated: (sessionId: string) => void;
-}
-
-// Form state
-export interface NewSessionFormState {
-  name: string;
-  workingDirectory: string;
-  agentType: AgentType;
-  skipPermissions: boolean;
-  useTmux: boolean;
-  initialPrompt: string;
-  // Worktree
-  useWorktree: boolean;
-  featureName: string;
-  baseBranch: string;
-  // Git
-  gitInfo: GitInfo | null;
-  checkingGit: boolean;
-  // UI
-  showNewProject: boolean;
-  newProjectName: string;
-  creatingProject: boolean;
-  advancedOpen: boolean;
-  // Submission
-  isLoading: boolean;
-  error: string | null;
-  // Recent
-  recentDirs: string[];
 }

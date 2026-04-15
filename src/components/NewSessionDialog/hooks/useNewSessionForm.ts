@@ -19,8 +19,8 @@ interface UseNewSessionFormOptions {
 }
 
 export function useNewSessionForm({
-  open,
-  selectedProjectId,
+  open: _open,
+  selectedProjectId: _selectedProjectId,
   onCreated,
   onClose,
 }: UseNewSessionFormOptions) {
@@ -117,13 +117,6 @@ export function useNewSessionForm({
       // Ignore parse errors
     }
   }, []);
-
-  // Reset when dialog opens
-  useEffect(() => {
-    if (open) {
-      // No project-specific initialization needed
-    }
-  }, [open, selectedProjectId]);
 
   // Save directory to recent list
   const addRecentDirectory = useCallback((dir: string) => {

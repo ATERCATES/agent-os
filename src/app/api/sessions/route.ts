@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { queries, type Session } from "@/lib/db";
 import { isValidAgentType, type AgentType } from "@/lib/providers";
 import { createWorktree } from "@/lib/worktrees";
-import { setupWorktree, type SetupResult } from "@/lib/env-setup";
+import { setupWorktree } from "@/lib/env-setup";
 import { findAvailablePort } from "@/lib/ports";
 import { runInBackground } from "@/lib/async-operations";
 
@@ -79,7 +79,6 @@ export async function POST(request: NextRequest) {
     let branchName: string | null = null;
     let actualWorkingDirectory = workingDirectory;
     let port: number | null = null;
-    const setupResult: SetupResult | null = null;
 
     if (useWorktree && featureName) {
       try {
@@ -160,19 +159,12 @@ export async function POST(request: NextRequest) {
 
     const session = await queries.getSession(id);
 
-    const sessionInitialPrompt = initialPrompt?.trim();
-    const combinedPrompt: string | undefined =
-      sessionInitialPrompt || undefined;
+    const combinedPrompt = initialPrompt?.trim() || undefined;
 
-    // Include setup result and initial prompt in response
     const response: {
       session: Session | null;
-      setup?: SetupResult;
       initialPrompt?: string;
     } = { session };
-    if (setupResult) {
-      response.setup = setupResult;
-    }
     if (combinedPrompt) {
       response.initialPrompt = combinedPrompt;
     }
