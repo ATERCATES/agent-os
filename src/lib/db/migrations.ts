@@ -44,6 +44,19 @@ const migrations: Migration[] = [
       `);
     },
   },
+  {
+    id: 4,
+    name: "drop_unused_session_columns",
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE sessions DROP COLUMN pr_url;
+        ALTER TABLE sessions DROP COLUMN pr_number;
+        ALTER TABLE sessions DROP COLUMN pr_status;
+        ALTER TABLE sessions DROP COLUMN listening_ports;
+        ALTER TABLE sessions DROP COLUMN group_path;
+      `);
+    },
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

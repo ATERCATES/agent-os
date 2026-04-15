@@ -301,15 +301,6 @@ async function buildSnapshot(
       listeningPorts: ports,
       tunnelUrls,
     };
-
-    try {
-      db.prepare("UPDATE sessions SET listening_ports = ? WHERE id = ?").run(
-        JSON.stringify(ports),
-        sessionId
-      );
-    } catch {
-      // DB update failure shouldn't break the monitor
-    }
   }
 
   // Filter out hidden sessions

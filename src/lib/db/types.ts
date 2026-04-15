@@ -12,7 +12,6 @@ export interface Session {
   claude_session_id: string | null;
   model: string;
   system_prompt: string | null;
-  group_path: string; // Deprecated - use project_id
   project_id: string | null;
   agent_type: AgentType;
   auto_approve: boolean;
@@ -21,15 +20,10 @@ export interface Session {
   branch_name: string | null;
   base_branch: string | null;
   dev_server_port: number | null;
-  // PR tracking
-  pr_url: string | null;
-  pr_number: number | null;
-  pr_status: "open" | "merged" | "closed" | null;
   // Orchestration fields
   conductor_session_id: string | null;
   worker_task: string | null;
   worker_status: "pending" | "running" | "completed" | "failed" | null;
-  listening_ports: string;
 }
 
 export type DevServerType = "node" | "docker";

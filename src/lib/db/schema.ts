@@ -14,7 +14,6 @@ export function createSchema(db: Database.Database): void {
       claude_session_id TEXT,
       model TEXT DEFAULT 'sonnet',
       system_prompt TEXT,
-      group_path TEXT NOT NULL DEFAULT 'sessions',
       project_id TEXT,
       agent_type TEXT NOT NULL DEFAULT 'claude',
       auto_approve INTEGER NOT NULL DEFAULT 0,
@@ -22,9 +21,6 @@ export function createSchema(db: Database.Database): void {
       branch_name TEXT,
       base_branch TEXT,
       dev_server_port INTEGER,
-      pr_url TEXT,
-      pr_number INTEGER,
-      pr_status TEXT,
       conductor_session_id TEXT REFERENCES sessions(id),
       worker_task TEXT,
       worker_status TEXT

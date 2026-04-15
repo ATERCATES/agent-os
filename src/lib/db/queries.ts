@@ -84,17 +84,6 @@ export const queries = {
       [worktreePath, branchName, baseBranch, port, id]
     ),
 
-  updateSessionPR: (
-    prUrl: string | null,
-    prNumber: number | null,
-    prStatus: string | null,
-    id: string
-  ) =>
-    execute(
-      "UPDATE sessions SET pr_url = ?, pr_number = ?, pr_status = ?, updated_at = datetime('now') WHERE id = ?",
-      [prUrl, prNumber, prStatus, id]
-    ),
-
   updateSessionProject: (projectId: string, id: string) =>
     execute(
       "UPDATE sessions SET project_id = ?, updated_at = datetime('now') WHERE id = ?",
