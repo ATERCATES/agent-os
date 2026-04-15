@@ -8,7 +8,14 @@ import {
   expandPath,
   type GitFile,
 } from "./git-status";
-import type { ProjectRepository } from "./db";
+interface Repository {
+  id: string;
+  project_id: string;
+  name: string;
+  path: string;
+  is_primary: boolean;
+  sort_order: number;
+}
 
 /**
  * Extended git file with repository information
@@ -47,7 +54,7 @@ export interface MultiRepoGitStatus {
  * Get aggregated git status from multiple repositories
  */
 export function getMultiRepoGitStatus(
-  repositories: ProjectRepository[],
+  repositories: Repository[],
   fallbackPath?: string
 ): MultiRepoGitStatus {
   const result: MultiRepoGitStatus = {

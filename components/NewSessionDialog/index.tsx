@@ -15,19 +15,15 @@ import type { NewSessionDialogProps } from "./NewSessionDialog.types";
 
 export function NewSessionDialog({
   open,
-  projects,
   selectedProjectId,
   onClose,
   onCreated,
-  onCreateProject,
 }: NewSessionDialogProps) {
   const form = useNewSessionForm({
     open,
-    projects,
     selectedProjectId,
     onCreated,
     onClose,
-    onCreateProject,
   });
 
   return (

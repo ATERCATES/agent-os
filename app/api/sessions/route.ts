@@ -6,7 +6,6 @@ import { createWorktree } from "@/lib/worktrees";
 import { setupWorktree, type SetupResult } from "@/lib/env-setup";
 import { findAvailablePort } from "@/lib/ports";
 import { runInBackground } from "@/lib/async-operations";
-import { getProject } from "@/lib/projects";
 
 // GET /api/sessions - List all sessions
 export async function GET() {
@@ -52,7 +51,7 @@ export async function POST(request: NextRequest) {
       claudeSessionId = null,
       agentType: rawAgentType = "claude",
       autoApprove = false,
-      projectId = "uncategorized",
+      projectId = null,
       // Worktree options
       useWorktree = false,
       featureName = null,
@@ -161,20 +160,9 @@ export async function POST(request: NextRequest) {
 
     const session = await queries.getSession(id);
 
-    // Get project's initial prompt if available
-    const project = projectId ? await getProject(projectId) : null;
-    const projectInitialPrompt = project?.initial_prompt?.trim();
     const sessionInitialPrompt = initialPrompt?.trim();
-
-    // Combine prompts: project prompt first, then session prompt
-    let combinedPrompt: string | undefined;
-    if (projectInitialPrompt && sessionInitialPrompt) {
-      combinedPrompt = `${projectInitialPrompt}\n\n${sessionInitialPrompt}`;
-    } else if (projectInitialPrompt) {
-      combinedPrompt = projectInitialPrompt;
-    } else if (sessionInitialPrompt) {
-      combinedPrompt = sessionInitialPrompt;
-    }
+    const combinedPrompt: string | undefined =
+      sessionInitialPrompt || undefined;
 
     // Include setup result and initial prompt in response
     const response: {

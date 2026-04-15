@@ -39,14 +39,19 @@ import {
 } from "@/data/git/queries";
 import type { GitFile } from "@/lib/git-status";
 import type { MultiRepoGitFile } from "@/lib/multi-repo-git";
-import type { ProjectRepository } from "@/lib/db";
+interface GitRepository {
+  id: string;
+  name: string;
+  path: string;
+  is_primary: boolean;
+}
 
 interface GitDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workingDirectory: string;
   projectId?: string;
-  repositories?: ProjectRepository[];
+  repositories?: GitRepository[];
 }
 
 export function GitDrawer({

@@ -1,7 +1,6 @@
 "use client";
 
 import { SessionList } from "@/components/SessionList";
-import { NewSessionDialog } from "@/components/NewSessionDialog";
 import { StartServerDialog } from "@/components/DevServers/StartServerDialog";
 import { SidebarFooter } from "@/components/SidebarFooter";
 import { PaneLayout } from "@/components/PaneLayout";
@@ -11,26 +10,19 @@ import type { ViewProps } from "./types";
 
 export function MobileView({
   sessions,
-  projects,
   sessionStatuses,
   sidebarOpen,
   setSidebarOpen,
   activeSession: _activeSession,
   focusedActiveTab,
-  showNewSessionDialog,
-  setShowNewSessionDialog,
-  newSessionProjectId,
   showQuickSwitcher,
   setShowQuickSwitcher,
   attachToSession,
   openSessionInNewTab,
-  handleNewSessionInProject,
   handleOpenTerminal,
-  handleSessionCreated,
-  handleCreateProject,
   handleStartDevServer,
   handleCreateDevServer,
-  startDevServerProject,
+  startDevServerProjectId,
   setStartDevServerProjectId,
   newClaudeSession,
   resumeClaudeSession,
@@ -61,7 +53,6 @@ export function MobileView({
                 if (session) openSessionInNewTab(session);
                 setSidebarOpen(false);
               }}
-              onNewSessionInProject={handleNewSessionInProject}
               onOpenTerminal={handleOpenTerminal}
               onStartDevServer={handleStartDevServer}
               onCreateDevServer={handleCreateDevServer}
@@ -80,24 +71,15 @@ export function MobileView({
       </div>
 
       {/* Dialogs */}
-      <NewSessionDialog
-        open={showNewSessionDialog}
-        projects={projects}
-        selectedProjectId={newSessionProjectId ?? undefined}
-        onClose={() => setShowNewSessionDialog(false)}
-        onCreated={handleSessionCreated}
-        onCreateProject={handleCreateProject}
-      />
       <QuickSwitcher
         open={showQuickSwitcher}
         onOpenChange={setShowQuickSwitcher}
         currentSessionId={focusedActiveTab?.sessionId ?? undefined}
         onResumeClaudeSession={resumeClaudeSession}
       />
-      {startDevServerProject && (
+      {startDevServerProjectId && (
         <StartServerDialog
-          project={startDevServerProject}
-          projectDevServers={startDevServerProject.devServers}
+          workingDirectory={startDevServerProjectId}
           onStart={handleCreateDevServer}
           onClose={() => setStartDevServerProjectId(null)}
         />

@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Server, Container, Loader2, Play, FolderOpen } from "lucide-react";
+import { X, Server, Container, Loader2, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Project, ProjectDevServer } from "@/lib/db";
-
 interface DetectedServer {
   type: "node" | "docker";
   name: string;
@@ -13,10 +11,9 @@ interface DetectedServer {
 }
 
 interface StartServerDialogProps {
-  project: Project;
-  projectDevServers?: ProjectDevServer[];
+  workingDirectory: string;
+  projectName?: string;
   onStart: (opts: {
-    projectId: string;
     type: "node" | "docker";
     name: string;
     command: string;
@@ -27,8 +24,8 @@ interface StartServerDialogProps {
 }
 
 export function StartServerDialog({
-  project,
-  projectDevServers = [],
+  workingDirectory,
+  projectName,
   onStart,
   onClose,
 }: StartServerDialogProps) {
@@ -49,7 +46,7 @@ export function StartServerDialog({
     async function detect() {
       try {
         const res = await fetch(
-          `/api/dev-servers/detect?projectId=${project.id}`
+          `/api/dev-servers/detect?path=${encodeURIComponent(workingDirectory)}`
         );
         if (res.ok) {
           const data = await res.json();
@@ -62,38 +59,17 @@ export function StartServerDialog({
       }
     }
     detect();
-  }, [project.id]);
-
-  const handleStartProjectServer = async (server: ProjectDevServer) => {
-    setStarting(true);
-    setError(null);
-    try {
-      await onStart({
-        projectId: project.id,
-        type: server.type,
-        name: server.name,
-        command: server.command,
-        workingDirectory: project.working_directory,
-        ports: server.port ? [server.port] : undefined,
-      });
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start server");
-    } finally {
-      setStarting(false);
-    }
-  };
+  }, [workingDirectory]);
 
   const handleStartDetected = async (server: DetectedServer) => {
     setStarting(true);
     setError(null);
     try {
       await onStart({
-        projectId: project.id,
         type: server.type,
         name: server.name,
         command: server.command,
-        workingDirectory: project.working_directory,
+        workingDirectory,
         ports: server.ports,
       });
       onClose();
@@ -115,11 +91,10 @@ export function StartServerDialog({
     try {
       const port = parseInt(customPort, 10);
       await onStart({
-        projectId: project.id,
         type: customType,
         name: customName,
         command: customCommand,
-        workingDirectory: project.working_directory,
+        workingDirectory,
         ports: isNaN(port) ? undefined : [port],
       });
       onClose();
@@ -153,44 +128,10 @@ export function StartServerDialog({
         {/* Content */}
         <div className="space-y-4 p-4">
           {/* Project info */}
-          <div className="text-muted-foreground text-sm">
-            Project:{" "}
-            <span className="text-foreground font-medium">{project.name}</span>
-          </div>
-
-          {/* Project dev servers */}
-          {projectDevServers.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <FolderOpen className="h-4 w-4" />
-                Project servers
-              </div>
-              {projectDevServers.map((server) => (
-                <button
-                  key={server.id}
-                  onClick={() => handleStartProjectServer(server)}
-                  disabled={starting}
-                  className={cn(
-                    "border-primary/30 bg-primary/5 flex w-full items-center gap-3 rounded-lg border p-3",
-                    "hover:bg-primary/10 text-left transition-colors",
-                    "disabled:cursor-not-allowed disabled:opacity-50"
-                  )}
-                >
-                  {server.type === "docker" ? (
-                    <Container className="h-5 w-5 text-blue-500" />
-                  ) : (
-                    <Server className="h-5 w-5 text-green-500" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium">{server.name}</div>
-                    <div className="text-muted-foreground truncate text-xs">
-                      {server.command}
-                      {server.port && ` (port ${server.port})`}
-                    </div>
-                  </div>
-                  <Play className="text-primary h-4 w-4" />
-                </button>
-              ))}
+          {projectName && (
+            <div className="text-muted-foreground text-sm">
+              Project:{" "}
+              <span className="text-foreground font-medium">{projectName}</span>
             </div>
           )}
 

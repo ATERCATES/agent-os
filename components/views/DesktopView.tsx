@@ -1,7 +1,6 @@
 "use client";
 
 import { SessionList } from "@/components/SessionList";
-import { NewSessionDialog } from "@/components/NewSessionDialog";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { StartServerDialog } from "@/components/DevServers/StartServerDialog";
 import { SidebarFooter } from "@/components/SidebarFooter";
@@ -27,7 +26,6 @@ import type { ViewProps } from "./types";
 
 export function DesktopView({
   sessions,
-  projects,
   sessionStatuses,
   sidebarOpen,
   setSidebarOpen,
@@ -35,9 +33,6 @@ export function DesktopView({
   focusedActiveTab,
   copiedSessionId,
   setCopiedSessionId,
-  showNewSessionDialog,
-  setShowNewSessionDialog,
-  newSessionProjectId,
   showNotificationSettings,
   setShowNotificationSettings,
   showQuickSwitcher,
@@ -48,13 +43,10 @@ export function DesktopView({
   requestPermission,
   attachToSession,
   openSessionInNewTab,
-  handleNewSessionInProject,
   handleOpenTerminal,
-  handleSessionCreated,
-  handleCreateProject,
   handleStartDevServer,
   handleCreateDevServer,
-  startDevServerProject,
+  startDevServerProjectId,
   setStartDevServerProjectId,
   newClaudeSession,
   resumeClaudeSession,
@@ -87,7 +79,6 @@ export function DesktopView({
                 const session = sessions.find((s) => s.id === id);
                 if (session) openSessionInNewTab(session);
               }}
-              onNewSessionInProject={handleNewSessionInProject}
               onOpenTerminal={handleOpenTerminal}
               onStartDevServer={handleStartDevServer}
               onCreateDevServer={handleCreateDevServer}
@@ -227,14 +218,6 @@ export function DesktopView({
       </div>
 
       {/* Dialogs */}
-      <NewSessionDialog
-        open={showNewSessionDialog}
-        projects={projects}
-        selectedProjectId={newSessionProjectId ?? undefined}
-        onClose={() => setShowNewSessionDialog(false)}
-        onCreated={handleSessionCreated}
-        onCreateProject={handleCreateProject}
-      />
       <QuickSwitcher
         open={showQuickSwitcher}
         onOpenChange={setShowQuickSwitcher}
@@ -242,10 +225,9 @@ export function DesktopView({
         sessionStatuses={sessionStatuses}
         onResumeClaudeSession={resumeClaudeSession}
       />
-      {startDevServerProject && (
+      {startDevServerProjectId && (
         <StartServerDialog
-          project={startDevServerProject}
-          projectDevServers={startDevServerProject.devServers}
+          workingDirectory={startDevServerProjectId}
           onStart={handleCreateDevServer}
           onClose={() => setStartDevServerProjectId(null)}
         />

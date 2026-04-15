@@ -47,6 +47,12 @@ interface StateFile {
   ts: number;
 }
 
+interface DbSessionMeta {
+  name: string;
+  working_directory: string | null;
+  claude_session_id: string | null;
+}
+
 export interface SessionStatusSnapshot {
   sessionName: string;
   cwd: string | null;
@@ -230,18 +236,50 @@ async function buildSnapshot(
   stateFiles: Map<string, StateFile>
 ): Promise<Record<string, SessionStatusSnapshot>> {
   const snap: Record<string, SessionStatusSnapshot> = {};
-
+  const db = getDb();
   const entries = await Promise.all(
     [...tmuxSessions.entries()].map(async ([sessionId, tmuxName]) => {
+      const dbSession = db
+        .prepare(
+          "SELECT name, working_directory, claude_session_id FROM sessions WHERE id = ? LIMIT 1"
+        )
+        .get(sessionId) as DbSessionMeta | undefined;
+
+      if (dbSession) {
+        const cwd = dbSession.working_directory || null;
+        const ports = await detectSessionPorts(cwd);
+        return {
+          sessionId,
+          tmuxName,
+          name: dbSession.name,
+          cwd,
+          claudeSessionId: dbSession.claude_session_id,
+          ports,
+        };
+      }
+
       const meta = await resolveSessionMeta(sessionId);
       const ports = await detectSessionPorts(meta.cwd);
-      return { sessionId, tmuxName, ports, ...meta };
+      return {
+        sessionId,
+        tmuxName,
+        name: meta.name,
+        cwd: meta.cwd,
+        claudeSessionId: null,
+        ports,
+      };
     })
   );
 
-  const db = getDb();
   const allTunnels = getTunnelUrls();
-  for (const { sessionId, tmuxName, name, cwd, ports } of entries) {
+  for (const {
+    sessionId,
+    tmuxName,
+    name,
+    cwd,
+    claudeSessionId,
+    ports,
+  } of entries) {
     const agentType = getProviderIdFromSessionName(tmuxName) || "claude";
     const state = stateFiles.get(sessionId);
 
@@ -258,16 +296,17 @@ async function buildSnapshot(
       ...(state?.status === "waiting" && state.waitingContext
         ? { waitingContext: state.waitingContext }
         : {}),
-      claudeSessionId: sessionId,
+      claudeSessionId,
       agentType,
       listeningPorts: ports,
       tunnelUrls,
     };
 
     try {
-      db.prepare(
-        "UPDATE sessions SET listening_ports = ? WHERE id = ? OR claude_session_id = ?"
-      ).run(JSON.stringify(ports), sessionId, sessionId);
+      db.prepare("UPDATE sessions SET listening_ports = ? WHERE id = ?").run(
+        JSON.stringify(ports),
+        sessionId
+      );
     } catch {
       // DB update failure shouldn't break the monitor
     }
@@ -322,11 +361,6 @@ function updateDb(
       db.prepare(
         "UPDATE sessions SET updated_at = datetime('now') WHERE id = ?"
       ).run(id);
-      if (snap.claudeSessionId) {
-        db.prepare(
-          "UPDATE sessions SET claude_session_id = ? WHERE id = ? AND (claude_session_id IS NULL OR claude_session_id != ?)"
-        ).run(snap.claudeSessionId, id, snap.claudeSessionId);
-      }
     }
   } catch {
     // DB errors shouldn't break the monitor

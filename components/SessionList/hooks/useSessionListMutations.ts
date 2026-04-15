@@ -6,13 +6,7 @@ import {
   useRenameSession,
   useForkSession,
   useSummarizeSession,
-  useMoveSessionToProject,
 } from "@/data/sessions";
-import {
-  useToggleProject,
-  useDeleteProject,
-  useRenameProject,
-} from "@/data/projects";
 import {
   useStopDevServer,
   useRestartDevServer,
@@ -34,12 +28,6 @@ export function useSessionListMutations({
   const renameSessionMutation = useRenameSession();
   const forkSessionMutation = useForkSession();
   const summarizeSessionMutation = useSummarizeSession();
-  const moveSessionToProjectMutation = useMoveSessionToProject();
-
-  // Project mutations
-  const toggleProjectMutation = useToggleProject();
-  const deleteProjectMutation = useDeleteProject();
-  const renameProjectMutation = useRenameProject();
 
   // Dev server mutations
   const stopDevServerMutation = useStopDevServer();
@@ -81,41 +69,6 @@ export function useSessionListMutations({
       if (newSession) onSelectSession(newSession.id);
     },
     [summarizeSessionMutation, onSelectSession]
-  );
-
-  const handleMoveSessionToProject = useCallback(
-    async (sessionId: string, projectId: string) => {
-      await moveSessionToProjectMutation.mutateAsync({ sessionId, projectId });
-    },
-    [moveSessionToProjectMutation]
-  );
-
-  // Project handlers
-  const handleToggleProject = useCallback(
-    async (projectId: string, expanded: boolean) => {
-      await toggleProjectMutation.mutateAsync({ projectId, expanded });
-    },
-    [toggleProjectMutation]
-  );
-
-  const handleDeleteProject = useCallback(
-    async (projectId: string) => {
-      if (
-        !confirm(
-          "Delete this project? Sessions will be moved to Uncategorized."
-        )
-      )
-        return;
-      await deleteProjectMutation.mutateAsync(projectId);
-    },
-    [deleteProjectMutation]
-  );
-
-  const handleRenameProject = useCallback(
-    async (projectId: string, newName: string) => {
-      await renameProjectMutation.mutateAsync({ projectId, newName });
-    },
-    [renameProjectMutation]
   );
 
   // Dev server handlers
@@ -215,12 +168,6 @@ export function useSessionListMutations({
     handleRenameSession,
     handleForkSession,
     handleSummarize,
-    handleMoveSessionToProject,
-
-    // Project handlers
-    handleToggleProject,
-    handleDeleteProject,
-    handleRenameProject,
 
     // Dev server handlers
     handleStopDevServer,

@@ -1,7 +1,6 @@
 import { ADropdownMenu, menuItem } from "@/components/a/ADropdownMenu";
 import {
   Plus,
-  FolderPlus,
   FolderOpen,
   GitBranch,
   MoreHorizontal,
@@ -9,16 +8,16 @@ import {
 } from "lucide-react";
 
 interface SessionListHeaderProps {
-  onNewProject: () => void;
+  onNewSession: () => void;
   onOpenProject: () => void;
-  onCloneFromGithub: () => void;
+  onStartFromGit: () => void;
   onKillAll: () => void;
 }
 
 export function SessionListHeader({
-  onNewProject,
+  onNewSession,
   onOpenProject,
-  onCloneFromGithub,
+  onStartFromGit,
   onKillAll,
 }: SessionListHeaderProps) {
   return (
@@ -46,13 +45,11 @@ export function SessionListHeader({
       <div className="flex gap-1">
         <ADropdownMenu
           icon={Plus}
-          tooltip="New project"
+          tooltip="Session actions"
           items={[
-            menuItem("New Project", onNewProject, { icon: FolderPlus }),
+            menuItem("New Session", onNewSession, { icon: Plus }),
             menuItem("Open Project", onOpenProject, { icon: FolderOpen }),
-            menuItem("Clone from GitHub", onCloneFromGithub, {
-              icon: GitBranch,
-            }),
+            menuItem("Start from Git", onStartFromGit, { icon: GitBranch }),
           ]}
         />
         <ADropdownMenu

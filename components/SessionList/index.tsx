@@ -2,26 +2,44 @@
 
 import { useState, useRef, useCallback } from "react";
 import { ClaudeProjectsSection } from "@/components/ClaudeProjects";
-import { ActiveSessionsSection } from "./ActiveSessionsSection";
-import { NewProjectDialog } from "@/components/Projects";
 import { FolderPicker } from "@/components/FolderPicker";
+import { ActiveSessionsSection } from "./ActiveSessionsSection";
 import { SelectionToolbar } from "./SelectionToolbar";
 import { SessionListHeader } from "./SessionListHeader";
 import { KillAllConfirm } from "./KillAllConfirm";
 import { useSessionListMutations } from "./hooks/useSessionListMutations";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Loader2, AlertCircle } from "lucide-react";
 import type { Session } from "@/lib/db";
 import { useViewport } from "@/hooks/useViewport";
 
 import { useSessionsQuery } from "@/data/sessions";
-import { useCreateProject } from "@/data/projects";
 import { useClaudeProjectsQuery } from "@/data/claude";
+import { useCloneRepo } from "@/data/git/queries";
 
 import type { SessionListProps } from "./SessionList.types";
 
 export type { SessionListProps } from "./SessionList.types";
+
+function extractRepoName(url: string): string {
+  const match = url.trim().match(/\/([\w.-]+?)(?:\.git)?$/);
+  return match?.[1] || "repo";
+}
+
+function extractFolderName(path: string): string {
+  const trimmed = path.replace(/\/+$/, "");
+  const parts = trimmed.split("/").filter(Boolean);
+  return parts[parts.length - 1] || "project";
+}
 
 export function SessionList({
   activeSessionId: _activeSessionId,
@@ -54,12 +72,17 @@ export function SessionList({
   const allSessionIds = sessions.map((s: Session) => s.id);
 
   const mutations = useSessionListMutations({ onSelectSession: onSelect });
-  const createProject = useCreateProject();
+  const cloneRepo = useCloneRepo();
 
   const [showKillAllConfirm, setShowKillAllConfirm] = useState(false);
-  const [showNewProjectDialog, setShowNewProjectDialog] = useState(false);
-  const [newProjectMode, setNewProjectMode] = useState<"new" | "clone">("new");
   const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const [folderPickerMode, setFolderPickerMode] = useState<"open" | "clone">(
+    "open"
+  );
+  const [showCloneDialog, setShowCloneDialog] = useState(false);
+  const [cloneDirectory, setCloneDirectory] = useState("");
+  const [cloneUrl, setCloneUrl] = useState("");
+  const [cloneError, setCloneError] = useState<string | null>(null);
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingHoverRef = useRef<{
@@ -83,18 +106,62 @@ export function SessionList({
     }, []),
   };
 
+  const openProjectPicker = () => {
+    setFolderPickerMode("open");
+    setShowFolderPicker(true);
+  };
+
+  const openClonePicker = () => {
+    setFolderPickerMode("clone");
+    setShowFolderPicker(true);
+  };
+
+  const handleFolderSelect = (path: string) => {
+    setShowFolderPicker(false);
+    if (folderPickerMode === "open") {
+      onNewSession?.(path, extractFolderName(path));
+      return;
+    }
+
+    setCloneDirectory(path);
+    setCloneUrl("");
+    setCloneError(null);
+    setShowCloneDialog(true);
+  };
+
+  const handleCloneSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCloneError(null);
+
+    const trimmedUrl = cloneUrl.trim();
+    if (!trimmedUrl) {
+      setCloneError("Repository URL is required");
+      return;
+    }
+
+    cloneRepo.mutate(
+      { url: trimmedUrl, directory: cloneDirectory },
+      {
+        onSuccess: (data) => {
+          const repoName = data.name || extractRepoName(trimmedUrl);
+          setShowCloneDialog(false);
+          setCloneUrl("");
+          setCloneDirectory("");
+          onNewSession?.(data.path, repoName);
+        },
+        onError: (error) => {
+          setCloneError(error.message || "Failed to clone repository");
+        },
+      }
+    );
+  };
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <SessionListHeader
-        onNewProject={() => {
-          setNewProjectMode("new");
-          setShowNewProjectDialog(true);
-        }}
-        onOpenProject={() => setShowFolderPicker(true)}
-        onCloneFromGithub={() => {
-          setNewProjectMode("clone");
-          setShowNewProjectDialog(true);
-        }}
+        onNewSession={() => onNewSession?.()}
+        onOpenProject={openProjectPicker}
+        onStartFromGit={openClonePicker}
         onKillAll={() => setShowKillAllConfirm(true)}
       />
 
@@ -160,38 +227,63 @@ export function SessionList({
           )}
         </div>
       </ScrollArea>
-
-      <NewProjectDialog
-        open={showNewProjectDialog}
-        mode={newProjectMode}
-        onClose={() => setShowNewProjectDialog(false)}
-        onCreated={() => setShowNewProjectDialog(false)}
-      />
-
       {showFolderPicker && (
         <FolderPicker
-          initialPath="~"
           onClose={() => setShowFolderPicker(false)}
-          onSelect={(path) => {
-            const parts = path.split("/").filter(Boolean);
-            const name = parts[parts.length - 1] || "project";
-
-            createProject.mutate(
-              {
-                name,
-                workingDirectory: path,
-                agentType: "claude",
-                defaultModel: "sonnet",
-                devServers: [],
-              },
-              {
-                onSuccess: () => setShowFolderPicker(false),
-                onError: () => setShowFolderPicker(false),
-              }
-            );
-          }}
+          onSelect={handleFolderSelect}
         />
       )}
+      <Dialog
+        open={showCloneDialog}
+        onOpenChange={(open) => {
+          if (cloneRepo.isPending) return;
+          setShowCloneDialog(open);
+          if (!open) {
+            setCloneUrl("");
+            setCloneError(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start from Git</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCloneSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Clone into</label>
+              <p className="text-muted-foreground rounded-md border px-3 py-2 text-sm">
+                {cloneDirectory}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Repository URL</label>
+              <Input
+                value={cloneUrl}
+                onChange={(e) => setCloneUrl(e.target.value)}
+                placeholder="https://github.com/user/repo.git"
+                autoFocus
+              />
+            </div>
+            {cloneError && <p className="text-sm text-red-500">{cloneError}</p>}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCloneDialog(false)}
+                disabled={cloneRepo.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={cloneRepo.isPending || !cloneUrl.trim()}
+              >
+                {cloneRepo.isPending ? "Cloning..." : "Clone & Start Session"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

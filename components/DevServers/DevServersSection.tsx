@@ -4,11 +4,10 @@ import { useState } from "react";
 import { ChevronDown, Server } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DevServerCard } from "./DevServerCard";
-import type { DevServer, Project } from "@/lib/db";
+import type { DevServer } from "@/lib/db";
 
 interface DevServersSectionProps {
   servers: DevServer[];
-  projects: Project[];
   onStart: (id: string) => Promise<void>;
   onStop: (id: string) => Promise<void>;
   onRestart: (id: string) => Promise<void>;
@@ -18,7 +17,6 @@ interface DevServersSectionProps {
 
 export function DevServersSection({
   servers,
-  projects,
   onStart,
   onStop,
   onRestart,
@@ -31,9 +29,6 @@ export function DevServersSection({
 
   // Count running servers
   const runningCount = servers.filter((s) => s.status === "running").length;
-
-  // Create project lookup map
-  const projectMap = new Map(projects.map((p) => [p.id, p]));
 
   return (
     <div className="border-border/50 border-b">
@@ -76,7 +71,6 @@ export function DevServersSection({
             <DevServerCard
               key={server.id}
               server={server}
-              projectName={projectMap.get(server.project_id)?.name}
               onStart={onStart}
               onStop={onStop}
               onRestart={onRestart}

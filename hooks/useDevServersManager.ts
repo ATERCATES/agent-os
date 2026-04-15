@@ -8,7 +8,7 @@ import {
 } from "@/data/dev-servers";
 
 interface CreateDevServerOptions {
-  projectId: string;
+  projectId?: string | null;
   type: "node" | "docker";
   name: string;
   command: string;
@@ -27,8 +27,8 @@ export function useDevServersManager() {
   const removeMutation = useRemoveDevServer();
   const createMutation = useCreateDevServer();
 
-  const startDevServer = useCallback((projectId: string) => {
-    setStartDevServerProjectId(projectId);
+  const startDevServer = useCallback((workingDirectory: string) => {
+    setStartDevServerProjectId(workingDirectory);
   }, []);
 
   const stopDevServer = useCallback(

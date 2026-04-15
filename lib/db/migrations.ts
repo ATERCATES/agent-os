@@ -16,6 +16,34 @@ const migrations: Migration[] = [
       );
     },
   },
+  {
+    id: 2,
+    name: "drop_project_tables",
+    up: (db) => {
+      db.exec(`
+        DROP TABLE IF EXISTS project_repositories;
+        DROP TABLE IF EXISTS project_dev_servers;
+        DROP TABLE IF EXISTS projects;
+        DROP TABLE IF EXISTS groups;
+        DROP INDEX IF EXISTS idx_sessions_project;
+        DROP INDEX IF EXISTS idx_sessions_group;
+        DROP INDEX IF EXISTS idx_project_dev_servers_project;
+        DROP INDEX IF EXISTS idx_project_repositories_project;
+      `);
+    },
+  },
+  {
+    id: 3,
+    name: "sanitize_claude_session_ids",
+    up: (db) => {
+      db.exec(`
+        UPDATE sessions
+        SET claude_session_id = NULL
+        WHERE claude_session_id IS NOT NULL
+          AND claude_session_id = id;
+      `);
+    },
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

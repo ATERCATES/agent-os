@@ -19,7 +19,7 @@ if (!fs.existsSync(LOGS_DIR)) {
 }
 
 export interface StartServerOptions {
-  projectId: string;
+  projectId?: string | null;
   type: DevServerType;
   name: string;
   command: string;
@@ -264,7 +264,7 @@ export async function startServer(
   // Create database record first
   await queries.createDevServer(
     id,
-    opts.projectId,
+    opts.projectId ?? null,
     opts.type,
     opts.name,
     opts.command,

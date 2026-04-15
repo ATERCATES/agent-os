@@ -1,5 +1,4 @@
 import type { AgentType } from "@/lib/providers";
-import type { ProjectWithDevServers } from "@/lib/projects";
 
 // LocalStorage keys
 export const SKIP_PERMISSIONS_KEY = "agentOS:skipPermissions";
@@ -86,22 +85,15 @@ export interface GitInfo {
 // Props for main dialog
 export interface NewSessionDialogProps {
   open: boolean;
-  projects: ProjectWithDevServers[];
   selectedProjectId?: string;
   onClose: () => void;
   onCreated: (sessionId: string) => void;
-  onCreateProject?: (
-    name: string,
-    workingDirectory: string,
-    agentType: AgentType
-  ) => Promise<string | null>;
 }
 
 // Form state
 export interface NewSessionFormState {
   name: string;
   workingDirectory: string;
-  projectId: string | null;
   agentType: AgentType;
   skipPermissions: boolean;
   useTmux: boolean;

@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { ProjectRepository } from "@/lib/db";
 import { repositoryKeys } from "./keys";
-import { projectKeys } from "@/data/projects/keys";
+
+interface ProjectRepository {
+  id: string;
+  project_id: string;
+  name: string;
+  path: string;
+  is_primary: boolean;
+  sort_order: number;
+}
 
 async function fetchProjectRepositories(
   projectId: string
@@ -49,7 +56,6 @@ export function useAddRepository() {
       queryClient.invalidateQueries({
         queryKey: repositoryKeys.list(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
     },
   });
 }
@@ -88,7 +94,6 @@ export function useUpdateRepository() {
       queryClient.invalidateQueries({
         queryKey: repositoryKeys.list(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
     },
   });
 }
@@ -116,7 +121,6 @@ export function useDeleteRepository() {
       queryClient.invalidateQueries({
         queryKey: repositoryKeys.list(variables.projectId),
       });
-      queryClient.invalidateQueries({ queryKey: projectKeys.list() });
     },
   });
 }

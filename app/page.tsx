@@ -28,7 +28,6 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useViewport } from "@/hooks/useViewport";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { useSessions } from "@/hooks/useSessions";
-import { useProjects } from "@/hooks/useProjects";
 import { useDevServersManager } from "@/hooks/useDevServersManager";
 import { useSessionStatuses } from "@/hooks/useSessionStatuses";
 import type { Session } from "@/lib/db";
@@ -43,10 +42,6 @@ import { useClaudeProjectsQuery } from "@/data/claude";
 function HomeContent() {
   // UI State
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showNewSessionDialog, setShowNewSessionDialog] = useState(false);
-  const [newSessionProjectId, setNewSessionProjectId] = useState<string | null>(
-    null
-  );
   const [showNotificationSettings, setShowNotificationSettings] =
     useState(false);
   const [showQuickSwitcher, setShowQuickSwitcher] = useState(false);
@@ -60,7 +55,6 @@ function HomeContent() {
 
   // Data hooks
   const { sessions, fetchSessions } = useSessions();
-  const { projects, fetchProjects } = useProjects();
   const { data: claudeProjects } = useClaudeProjectsQuery();
   const {
     startDevServerProjectId,
@@ -68,6 +62,26 @@ function HomeContent() {
     startDevServer,
     createDevServer,
   } = useDevServersManager();
+
+  const pollClaudeSessionId = useCallback(
+    async (sessionId: string, maxAttempts = 20, intervalMs = 500) => {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+          const res = await fetch(`/api/sessions/${sessionId}/claude-session`);
+          const data = await res.json();
+          if (data?.claude_session_id) {
+            await fetchSessions();
+            return data.claude_session_id as string;
+          }
+        } catch {
+          // keep polling
+        }
+        await new Promise((resolve) => setTimeout(resolve, intervalMs));
+      }
+      return null;
+    },
+    [fetchSessions]
+  );
 
   // Helper to get init script command from API
   const getInitScriptCommand = useCallback(
@@ -289,13 +303,29 @@ function HomeContent() {
 
   const resumeClaudeSession = useCallback(
     (
-      claudeSessionId: string,
+      sessionIdOrClaudeId: string,
       cwd: string,
       sessionName?: string,
       projectName?: string
     ) => {
       const terminalInfo = getTerminalWithFallback();
       if (!terminalInfo) return;
+
+      const matchedSession = sessions.find(
+        (s) =>
+          s.id === sessionIdOrClaudeId ||
+          s.claude_session_id === sessionIdOrClaudeId
+      );
+      const claudeSessionId =
+        matchedSession?.claude_session_id || sessionIdOrClaudeId;
+
+      if (matchedSession && !matchedSession.claude_session_id) {
+        void pollClaudeSessionId(matchedSession.id);
+        alert(
+          "Session is still initializing. Please try resume again in a moment."
+        );
+        return;
+      }
 
       const { terminal, paneId } = terminalInfo;
       const activeTab = getActiveTab(paneId);
@@ -318,7 +348,7 @@ function HomeContent() {
             terminal.sendCommand(tmuxCmd);
             attachSession(
               paneId,
-              claudeSessionId,
+              matchedSession?.id || claudeSessionId,
               tmuxName,
               sessionName,
               projectName,
@@ -330,7 +360,13 @@ function HomeContent() {
         isInTmux ? 100 : 0
       );
     },
-    [getTerminalWithFallback, getActiveTab, attachSession]
+    [
+      getTerminalWithFallback,
+      getActiveTab,
+      attachSession,
+      sessions,
+      pollClaudeSessionId,
+    ]
   );
 
   const [newSessionPending, setNewSessionPending] = useState<{
@@ -343,7 +379,7 @@ function HomeContent() {
   }, []);
 
   const handleNewClaudeSessionConfirm = useCallback(
-    (name: string, overrideCwd?: string, overrideProject?: string) => {
+    async (name: string, overrideCwd?: string, overrideProject?: string) => {
       if (!newSessionPending) return;
       setNewSessionPending(null);
 
@@ -353,11 +389,24 @@ function HomeContent() {
       const { terminal, paneId } = terminalInfo;
       const activeTab = getActiveTab(paneId);
       const isInTmux = !!activeTab?.attachedTmux;
-      const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
-      const tmuxName = `claude-new-${id}`;
       const cwd = overrideCwd || newSessionPending.cwd;
       const projectName = overrideProject || newSessionPending.projectName;
-      const tmuxCmd = `tmux new -s ${tmuxName} -c "${cwd}" "claude"`;
+
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim() || undefined,
+          workingDirectory: cwd,
+          agentType: "claude",
+          useTmux: true,
+        }),
+      });
+      const data = await res.json();
+      const session = data.session as Session | undefined;
+      if (!session?.id || !session.tmux_name) return;
+      const tmuxCmd = `tmux new -s ${session.tmux_name} -c "${cwd}" "claude"`;
+      void pollClaudeSessionId(session.id);
 
       if (isInTmux) {
         terminal.sendInput("\x02d");
@@ -368,7 +417,14 @@ function HomeContent() {
           terminal.sendInput("\x03");
           setTimeout(() => {
             terminal.sendCommand(tmuxCmd);
-            attachSession(paneId, id, tmuxName, name, projectName, cwd);
+            attachSession(
+              paneId,
+              session.id,
+              session.tmux_name!,
+              name,
+              projectName,
+              cwd
+            );
             terminal.focus();
           }, 50);
         },
@@ -383,6 +439,7 @@ function HomeContent() {
       getActiveTab,
       attachSession,
       isMobile,
+      pollClaudeSessionId,
     ]
   );
 
@@ -454,7 +511,6 @@ function HomeContent() {
         key={paneId}
         paneId={paneId}
         sessions={sessions}
-        projects={projects}
         sessionStatuses={sessionStatuses}
         onRegisterTerminal={registerTerminalRef}
         onMenuClick={isMobile ? () => setSidebarOpen(true) : undefined}
@@ -464,7 +520,6 @@ function HomeContent() {
     ),
     [
       sessions,
-      projects,
       sessionStatuses,
       registerTerminalRef,
       isMobile,
@@ -473,65 +528,16 @@ function HomeContent() {
     ]
   );
 
-  // New session in project handler
-  const handleNewSessionInProject = useCallback((projectId: string) => {
-    setNewSessionProjectId(projectId);
-    setShowNewSessionDialog(true);
-  }, []);
-
-  // Session created handler (shared between desktop/mobile)
-  const handleSessionCreated = useCallback(
-    async (sessionId: string) => {
-      setShowNewSessionDialog(false);
-      setNewSessionProjectId(null);
-      await fetchSessions();
-
-      const res = await fetch(`/api/sessions/${sessionId}`);
-      const data = await res.json();
-      if (!data.session) return;
-
-      setTimeout(() => attachToSession(data.session), 100);
-    },
-    [fetchSessions, attachToSession]
-  );
-
-  // Project created handler (shared between desktop/mobile)
-  const handleCreateProject = useCallback(
-    async (
-      name: string,
-      workingDirectory: string,
-      agentType?: string
-    ): Promise<string | null> => {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, workingDirectory, agentType }),
-      });
-      const data = await res.json();
-      if (data.project) {
-        await fetchProjects();
-        return data.project.id;
-      }
-      return null;
-    },
-    [fetchProjects]
-  );
-
-  // Open terminal in project handler (shell session, not AI agent)
+  // Open terminal handler (shell session, not AI agent)
   const handleOpenTerminal = useCallback(
-    async (projectId: string) => {
-      const project = projects.find((p) => p.id === projectId);
-      if (!project) return;
-
-      // Create a shell session with the project's working directory
+    async (cwd: string) => {
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: `${project.name} Terminal`,
-          workingDirectory: project.working_directory || "~",
+          name: "Terminal",
+          workingDirectory: cwd || "~",
           agentType: "shell",
-          projectId,
         }),
       });
 
@@ -540,26 +546,21 @@ function HomeContent() {
 
       await fetchSessions();
 
-      // Small delay to ensure state updates, then attach
       setTimeout(() => {
         attachToSession(data.session);
       }, 100);
     },
-    [projects, fetchSessions, attachToSession]
+    [fetchSessions, attachToSession]
   );
 
-  // Active session and dev server project
+  // Active session
   const activeSession = sessions.find(
     (s) => s.id === focusedActiveTab?.sessionId
   );
-  const startDevServerProject = startDevServerProjectId
-    ? (projects.find((p) => p.id === startDevServerProjectId) ?? null)
-    : null;
 
   // View props
   const viewProps = {
     sessions,
-    projects,
     sessionStatuses,
     sidebarOpen,
     setSidebarOpen,
@@ -567,9 +568,6 @@ function HomeContent() {
     focusedActiveTab,
     copiedSessionId,
     setCopiedSessionId,
-    showNewSessionDialog,
-    setShowNewSessionDialog,
-    newSessionProjectId,
     showNotificationSettings,
     setShowNotificationSettings,
     showQuickSwitcher,
@@ -580,13 +578,10 @@ function HomeContent() {
     requestPermission,
     attachToSession,
     openSessionInNewTab,
-    handleNewSessionInProject,
     handleOpenTerminal,
-    handleSessionCreated,
-    handleCreateProject,
     handleStartDevServer: startDevServer,
     handleCreateDevServer: createDevServer,
-    startDevServerProject,
+    startDevServerProjectId,
     setStartDevServerProjectId,
     newClaudeSession,
     resumeClaudeSession,

@@ -76,7 +76,7 @@ export function useRemoveDevServer() {
 }
 
 interface CreateDevServerOptions {
-  projectId: string;
+  projectId?: string | null;
   type: "node" | "docker";
   name: string;
   command: string;

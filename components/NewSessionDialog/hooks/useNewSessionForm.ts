@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import type { AgentType } from "@/lib/providers";
-import type { ProjectWithDevServers } from "@/lib/projects";
 import { setPendingPrompt } from "@/stores/initialPrompt";
 import { useCreateSession } from "@/data/sessions";
 import {
@@ -14,24 +13,16 @@ import {
 
 interface UseNewSessionFormOptions {
   open: boolean;
-  projects: ProjectWithDevServers[];
   selectedProjectId?: string;
   onCreated: (sessionId: string) => void;
   onClose: () => void;
-  onCreateProject?: (
-    name: string,
-    workingDirectory: string,
-    agentType: AgentType
-  ) => Promise<string | null>;
 }
 
 export function useNewSessionForm({
   open,
-  projects,
   selectedProjectId,
   onCreated,
   onClose,
-  onCreateProject,
 }: UseNewSessionFormOptions) {
   // React Query mutation
   const createSession = useCreateSession();
@@ -39,7 +30,6 @@ export function useNewSessionForm({
   // Form state
   const [name, setName] = useState("");
   const [workingDirectory, setWorkingDirectory] = useState("~");
-  const [projectId, setProjectId] = useState<string | null>(null);
   const [skipPermissions, setSkipPermissions] = useState(false);
   const [useTmux, setUseTmux] = useState(true);
   const [initialPrompt, setInitialPrompt] = useState("");
@@ -52,9 +42,6 @@ export function useNewSessionForm({
   const [checkingGit, setCheckingGit] = useState(false);
 
   // UI state
-  const [showNewProject, setShowNewProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [creatingProject, setCreatingProject] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [showDirectoryPicker, setShowDirectoryPicker] = useState(false);
 
@@ -131,26 +118,12 @@ export function useNewSessionForm({
     }
   }, []);
 
-  // Initialize from selectedProjectId or first available project when dialog opens
+  // Reset when dialog opens
   useEffect(() => {
     if (open) {
-      // Use selectedProjectId if provided
-      if (selectedProjectId) {
-        setProjectId(selectedProjectId);
-        const project = projects.find((p) => p.id === selectedProjectId);
-        if (project && !project.is_uncategorized) {
-          setWorkingDirectory(project.working_directory);
-        }
-      } else {
-        // Otherwise, select first non-uncategorized project
-        const firstProject = projects.find((p) => !p.is_uncategorized);
-        if (firstProject) {
-          setProjectId(firstProject.id);
-          setWorkingDirectory(firstProject.working_directory);
-        }
-      }
+      // No project-specific initialization needed
     }
-  }, [open, selectedProjectId, projects]);
+  }, [open, selectedProjectId]);
 
   // Save directory to recent list
   const addRecentDirectory = useCallback((dir: string) => {
@@ -164,19 +137,6 @@ export function useNewSessionForm({
   }, []);
 
   // Handlers
-  const handleProjectChange = useCallback(
-    (newProjectId: string | null) => {
-      setProjectId(newProjectId);
-      if (newProjectId) {
-        const project = projects.find((p) => p.id === newProjectId);
-        if (project && !project.is_uncategorized) {
-          setWorkingDirectory(project.working_directory);
-        }
-      }
-    },
-    [projects]
-  );
-
   const handleSkipPermissionsChange = (checked: boolean) => {
     setSkipPermissions(checked);
     localStorage.setItem(SKIP_PERMISSIONS_KEY, String(checked));
@@ -216,7 +176,6 @@ export function useNewSessionForm({
       {
         name: name.trim() || undefined,
         workingDirectory,
-        projectId,
         agentType: "claude" as AgentType,
         useWorktree,
         featureName: useWorktree ? featureName.trim() : null,
@@ -247,40 +206,12 @@ export function useNewSessionForm({
     );
   };
 
-  const handleCreateProject = async () => {
-    if (
-      !newProjectName.trim() ||
-      !onCreateProject ||
-      !workingDirectory ||
-      workingDirectory === "~"
-    )
-      return;
-    setCreatingProject(true);
-    try {
-      const newId = await onCreateProject(
-        newProjectName.trim(),
-        workingDirectory,
-        "claude"
-      );
-      if (newId) {
-        setProjectId(newId);
-        setShowNewProject(false);
-        setNewProjectName("");
-      }
-    } finally {
-      setCreatingProject(false);
-    }
-  };
-
   const resetForm = () => {
     setName("");
     setWorkingDirectory("~");
-    setProjectId(null);
     setUseWorktree(false);
     setFeatureName("");
     setInitialPrompt("");
-    setShowNewProject(false);
-    setNewProjectName("");
     setCreationStep("creating");
     createSession.reset();
   };
@@ -296,7 +227,6 @@ export function useNewSessionForm({
     setName,
     workingDirectory,
     setWorkingDirectory,
-    projectId,
     skipPermissions,
     useTmux,
     initialPrompt,
@@ -311,11 +241,6 @@ export function useNewSessionForm({
     gitInfo,
     checkingGit,
     // UI
-    showNewProject,
-    setShowNewProject,
-    newProjectName,
-    setNewProjectName,
-    creatingProject,
     advancedOpen,
     setAdvancedOpen,
     showDirectoryPicker,
@@ -327,11 +252,9 @@ export function useNewSessionForm({
     // Recent
     recentDirs,
     // Handlers
-    handleProjectChange,
     handleSkipPermissionsChange,
     handleUseTmuxChange,
     handleSubmit,
-    handleCreateProject,
     handleClose,
   };
 }

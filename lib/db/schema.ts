@@ -30,17 +30,6 @@ export function createSchema(db: Database.Database): void {
       worker_status TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS groups (
-      path TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      expanded INTEGER NOT NULL DEFAULT 1,
-      sort_order INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    INSERT OR IGNORE INTO groups (path, name, sort_order)
-    VALUES ('sessions', 'Sessions', 0);
-
     CREATE TABLE IF NOT EXISTS dev_servers (
       id TEXT PRIMARY KEY,
       project_id TEXT,
@@ -56,47 +45,8 @@ export function createSchema(db: Database.Database): void {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS projects (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      working_directory TEXT NOT NULL,
-      agent_type TEXT NOT NULL DEFAULT 'claude',
-      default_model TEXT NOT NULL DEFAULT 'sonnet',
-      initial_prompt TEXT,
-      expanded INTEGER NOT NULL DEFAULT 1,
-      sort_order INTEGER NOT NULL DEFAULT 0,
-      is_uncategorized INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS project_dev_servers (
-      id TEXT PRIMARY KEY,
-      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-      name TEXT NOT NULL,
-      type TEXT NOT NULL DEFAULT 'node',
-      command TEXT NOT NULL,
-      port INTEGER,
-      port_env_var TEXT,
-      sort_order INTEGER NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS project_repositories (
-      id TEXT PRIMARY KEY,
-      project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-      name TEXT NOT NULL,
-      path TEXT NOT NULL,
-      is_primary INTEGER NOT NULL DEFAULT 0,
-      sort_order INTEGER NOT NULL DEFAULT 0
-    );
-
     CREATE INDEX IF NOT EXISTS idx_sessions_parent ON sessions(parent_session_id);
-    CREATE INDEX IF NOT EXISTS idx_sessions_group ON sessions(group_path);
-    CREATE INDEX IF NOT EXISTS idx_sessions_project ON sessions(project_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_conductor ON sessions(conductor_session_id);
-    CREATE INDEX IF NOT EXISTS idx_project_dev_servers_project ON project_dev_servers(project_id);
-    CREATE INDEX IF NOT EXISTS idx_project_repositories_project ON project_repositories(project_id);
-    CREATE INDEX IF NOT EXISTS idx_dev_servers_project ON dev_servers(project_id);
 
     CREATE TABLE IF NOT EXISTS hidden_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,9 +57,6 @@ export function createSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_hidden_items_type ON hidden_items(item_type);
-
-    INSERT OR IGNORE INTO projects (id, name, working_directory, is_uncategorized, sort_order)
-    VALUES ('uncategorized', 'Uncategorized', '~', 1, 999999);
 
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,

@@ -151,7 +151,7 @@ export function useMoveSessionToProject() {
 export interface CreateSessionInput {
   name?: string;
   workingDirectory: string;
-  projectId: string | null;
+  projectId?: string | null;
   agentType: AgentType;
   useWorktree: boolean;
   featureName: string | null;

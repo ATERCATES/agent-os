@@ -1,5 +1,4 @@
 import type { Session } from "@/lib/db";
-import type { ProjectWithDevServers } from "@/lib/projects";
 import type { NotificationSettings } from "@/lib/notifications";
 import type { TabData } from "@/lib/panes";
 
@@ -16,7 +15,6 @@ export interface SessionStatus {
 
 export interface ViewProps {
   sessions: Session[];
-  projects: ProjectWithDevServers[];
   sessionStatuses: Record<string, SessionStatus>;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -25,10 +23,6 @@ export interface ViewProps {
   copiedSessionId: boolean;
   setCopiedSessionId: (copied: boolean) => void;
 
-  // Dialogs
-  showNewSessionDialog: boolean;
-  setShowNewSessionDialog: (show: boolean) => void;
-  newSessionProjectId: string | null;
   showNotificationSettings: boolean;
   setShowNotificationSettings: (show: boolean) => void;
   showQuickSwitcher: boolean;
@@ -43,26 +37,19 @@ export interface ViewProps {
   // Handlers
   attachToSession: (session: Session) => void;
   openSessionInNewTab: (session: Session) => void;
-  handleNewSessionInProject: (projectId: string) => void;
-  handleOpenTerminal: (projectId: string) => void;
-  handleSessionCreated: (sessionId: string) => Promise<void>;
-  handleCreateProject: (
-    name: string,
-    workingDirectory: string,
-    agentType?: string
-  ) => Promise<string | null>;
+  handleOpenTerminal: (cwd: string) => Promise<void>;
 
   // Dev server (for StartServerDialog)
-  handleStartDevServer: (projectId: string) => void;
+  handleStartDevServer: (workingDirectory: string) => void;
   handleCreateDevServer: (opts: {
-    projectId: string;
+    projectId?: string | null;
     type: "node" | "docker";
     name: string;
     command: string;
     workingDirectory: string;
     ports?: number[];
   }) => Promise<void>;
-  startDevServerProject: ProjectWithDevServers | null;
+  startDevServerProjectId: string | null;
   setStartDevServerProjectId: (id: string | null) => void;
 
   // Claude sessions

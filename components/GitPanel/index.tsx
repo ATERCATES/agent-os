@@ -35,12 +35,17 @@ import {
 } from "@/data/git/queries";
 import type { GitStatus, GitFile } from "@/lib/git-status";
 import type { MultiRepoGitFile } from "@/lib/multi-repo-git";
-import type { ProjectRepository } from "@/lib/db";
+interface GitRepository {
+  id: string;
+  name: string;
+  path: string;
+  is_primary: boolean;
+}
 
 interface GitPanelProps {
   workingDirectory: string;
   projectId?: string;
-  repositories?: ProjectRepository[];
+  repositories?: GitRepository[];
   onFileSelect?: (file: GitFile, diff: string) => void;
 }
 
