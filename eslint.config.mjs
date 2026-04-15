@@ -4,7 +4,7 @@ import hooksPlugin from "eslint-plugin-react-hooks";
 import eslintConfigPrettier from "eslint-config-prettier";
 
 export default tseslint.config(
-  { ignores: [".next/", "node_modules/", "src-tauri/"] },
+  { ignores: [".next/", "node_modules/"] },
   ...tseslint.configs.recommended,
   {
     plugins: {
