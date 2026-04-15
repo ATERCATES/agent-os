@@ -3,17 +3,17 @@ import { parse } from "url";
 import next from "next";
 import { WebSocketServer, WebSocket } from "ws";
 import * as pty from "node-pty";
-import { initDb } from "./lib/db";
-import { startWatcher, addUpdateClient } from "./lib/claude/watcher";
-import { startStatusMonitor } from "./lib/status-monitor";
-import { setupHooks } from "./lib/hooks/setup";
+import { initDb } from "@/lib/db";
+import { startWatcher, addUpdateClient } from "@/lib/claude/watcher";
+import { startStatusMonitor } from "@/lib/status-monitor";
+import { setupHooks } from "@/lib/hooks/setup";
 import {
   validateSession,
   parseCookies,
   COOKIE_NAME,
   hasUsers,
-} from "./lib/auth";
-import { stopAllTunnels } from "./lib/tunnels";
+} from "@/lib/auth";
+import { stopAllTunnels } from "@/lib/tunnels";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOST || (dev ? "localhost" : "0.0.0.0");

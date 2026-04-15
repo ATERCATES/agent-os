@@ -36,10 +36,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ hidden: true });
   } catch (error) {
     console.error("Error hiding item:", error);
-    return NextResponse.json(
-      { error: "Failed to hide item" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to hide item" }, { status: 500 });
   }
 }
 

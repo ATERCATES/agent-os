@@ -69,7 +69,10 @@ export async function POST(request: NextRequest) {
     }
 
     const scriptContent = generateInitScript(agentCommand);
-    const scriptPath = path.join(os.tmpdir(), `claude-deck-init-${Date.now()}.sh`);
+    const scriptPath = path.join(
+      os.tmpdir(),
+      `claude-deck-init-${Date.now()}.sh`
+    );
 
     fs.writeFileSync(scriptPath, scriptContent, { mode: 0o755 });
 

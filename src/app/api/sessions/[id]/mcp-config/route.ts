@@ -9,7 +9,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const session = await queries.getSession(id) as Session | undefined;
+    const session = (await queries.getSession(id)) as Session | undefined;
 
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });

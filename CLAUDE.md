@@ -31,6 +31,21 @@ Comprehensive technical docs are in `docs/`:
 - **Single-user per instance** — no auth, each user runs their own instance
 - **Provider: Claude only** — OpenCode was removed, provider abstraction remains if needed
 
+## Project Structure
+
+All source code lives under `src/`. Root contains only config files and entry points.
+
+- `src/app/` — Next.js pages and API routes
+- `src/components/` — React components (feature-based subdirs)
+- `src/lib/` — Server-side logic, DB, auth, providers, Claude integration
+- `src/data/` — React Query keys and hooks (client-side data layer)
+- `src/hooks/` — Shared React hooks
+- `src/stores/` — Zustand stores
+- `src/contexts/` — React contexts
+- `src/styles/` — Theme CSS
+- `src/mcp/` — MCP server definitions
+- `server.ts` — Custom Node.js server (root entry point)
+
 ## Conventions
 
 - Package manager: **pnpm**
@@ -39,6 +54,7 @@ Comprehensive technical docs are in `docs/`:
 - Conventional commits (commitlint + Husky)
 - No comments in code unless logic is non-obvious
 - Pre-commit: lint-staged (formatting + typecheck)
+- Path alias: `@/` resolves to `src/`
 
 ## Common Pitfalls
 

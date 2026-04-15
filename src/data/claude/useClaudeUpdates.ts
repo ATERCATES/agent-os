@@ -9,9 +9,7 @@ export function useClaudeUpdates() {
 
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(
-      `${protocol}//${window.location.host}/ws/updates`
-    );
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/updates`);
 
     ws.onmessage = (event) => {
       try {

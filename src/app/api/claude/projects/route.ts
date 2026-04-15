@@ -28,8 +28,7 @@ export async function GET() {
       if (!a.lastActivity) return 1;
       if (!b.lastActivity) return -1;
       return (
-        new Date(b.lastActivity).getTime() -
-        new Date(a.lastActivity).getTime()
+        new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
       );
     });
 

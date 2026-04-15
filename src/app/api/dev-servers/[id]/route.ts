@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const server = await queries.getDevServer(id) as DevServer | undefined;
+    const server = (await queries.getDevServer(id)) as DevServer | undefined;
 
     if (!server) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });

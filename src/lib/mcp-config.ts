@@ -31,6 +31,7 @@ export function ensureMcpConfig(
   const configPath = path.join(workingDirectory, ".mcp.json");
   const orchestrationServerPath = path.join(
     process.cwd(),
+    "src",
     "mcp",
     "orchestration-server.ts"
   );
