@@ -220,6 +220,9 @@ export const Pane = memo(function Pane({
     []
   );
 
+  // Track which tabs have had their initial tmux attach
+  const attachedTabsRef = useRef<Set<string>>(new Set());
+
   // Create onConnected callback for a specific tab
   const getTerminalConnectedHandler = useCallback(
     (tab: (typeof paneData.tabs)[0]) => () => {
@@ -231,7 +234,11 @@ export const Pane = memo(function Pane({
 
       onRegisterTerminal(paneId, tab.id, handle);
 
-      // Determine tmux session name to attach
+      // Only send tmux attach on first connection, not on reconnections
+      // (the PTY persists across WebSocket reconnects)
+      if (attachedTabsRef.current.has(tab.id)) return;
+      attachedTabsRef.current.add(tab.id);
+
       const tmuxName = tab.sessionId
         ? sessions.find((s) => s.id === tab.sessionId)?.tmux_name ||
           tab.attachedTmux
