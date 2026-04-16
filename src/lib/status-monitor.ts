@@ -23,6 +23,7 @@ import { queries } from "./db";
 import { getTunnelUrls } from "./tunnels";
 import { STATES_DIR } from "./hooks/setup";
 import { getSessionInfo } from "@anthropic-ai/claude-agent-sdk";
+import { networkInfo, type ListeningProcess } from "./network-info";
 
 const execAsync = promisify(exec);
 
@@ -99,14 +100,8 @@ function listStateFiles(): Map<string, StateFile> {
 
 // --- Port detection ---
 
-interface ListeningProcess {
-  pid: string;
-  port: number;
-  cwd: string;
-}
-
 let cachedListeners: { data: ListeningProcess[]; ts: number } | null = null;
-const LISTENER_CACHE_TTL = 2500;
+const LISTENER_CACHE_TTL = 5000;
 
 async function getListeningProcesses(): Promise<ListeningProcess[]> {
   const now = Date.now();
@@ -115,52 +110,26 @@ async function getListeningProcesses(): Promise<ListeningProcess[]> {
   }
 
   try {
-    const { stdout } = await execAsync(
-      `lsof -P -iTCP -sTCP:LISTEN -Fn 2>/dev/null || true`
-    );
+    const sockets = await networkInfo.getAllListeners();
+    const pids = [...new Set(sockets.map((s) => s.pid))];
+    const cwdMap = await networkInfo.resolveCwds(pids);
 
-    // Parse lsof output: lines alternate between p (pid) and n (name)
+    const seen = new Set<string>();
     const results: ListeningProcess[] = [];
-    let currentPid = "";
-    for (const line of stdout.split("\n")) {
-      if (line.startsWith("p")) {
-        currentPid = line.slice(1);
-      } else if (line.startsWith("n") && currentPid) {
-        const port = parseInt(line.slice(line.lastIndexOf(":") + 1), 10);
-        if (!isNaN(port) && port > 0) {
-          results.push({ pid: currentPid, port, cwd: "" });
-        }
+    for (const s of sockets) {
+      const key = `${s.pid}:${s.port}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        results.push({
+          pid: String(s.pid),
+          port: s.port,
+          cwd: cwdMap.get(s.pid) || "",
+        });
       }
     }
 
-    // Deduplicate by pid+port
-    const unique = [
-      ...new Map(results.map((r) => [`${r.pid}:${r.port}`, r])).values(),
-    ];
-
-    // Batch-resolve cwds
-    if (unique.length > 0) {
-      const pids = [...new Set(unique.map((r) => r.pid))].join(",");
-      try {
-        const { stdout: cwdOut } = await execAsync(
-          `lsof -a -p ${pids} -d cwd -Fpn 2>/dev/null || true`
-        );
-        const cwdMap = new Map<string, string>();
-        let pid = "";
-        for (const line of cwdOut.split("\n")) {
-          if (line.startsWith("p")) pid = line.slice(1);
-          else if (line.startsWith("n") && pid) cwdMap.set(pid, line.slice(1));
-        }
-        for (const entry of unique) {
-          entry.cwd = cwdMap.get(entry.pid) || "";
-        }
-      } catch {
-        // cwd resolution failed, proceed without
-      }
-    }
-
-    cachedListeners = { data: unique, ts: now };
-    return unique;
+    cachedListeners = { data: results, ts: now };
+    return results;
   } catch {
     return [];
   }
@@ -352,27 +321,44 @@ function updateDb(
 
 // --- Core tick (only for dead detection + state file sync) ---
 
-async function tick(): Promise<void> {
-  const tmuxSessions = await listTmuxSessions();
-  const stateFiles = listStateFiles();
+let tickInProgress = false;
+let tickPending = false;
 
-  // Clean up state files for sessions that no longer exist in tmux
-  for (const sessionId of stateFiles.keys()) {
-    if (!tmuxSessions.has(sessionId)) {
-      try {
-        fs.unlinkSync(path.join(STATES_DIR, `${sessionId}.json`));
-      } catch {
-        // ignore
+async function tick(): Promise<void> {
+  if (tickInProgress) {
+    tickPending = true;
+    return;
+  }
+  tickInProgress = true;
+
+  try {
+    const tmuxSessions = await listTmuxSessions();
+    const stateFiles = listStateFiles();
+
+    // Clean up state files for sessions that no longer exist in tmux
+    for (const sessionId of stateFiles.keys()) {
+      if (!tmuxSessions.has(sessionId)) {
+        try {
+          fs.unlinkSync(path.join(STATES_DIR, `${sessionId}.json`));
+        } catch {
+          // ignore
+        }
       }
     }
-  }
 
-  const newSnapshot = await buildSnapshot(tmuxSessions, stateFiles);
+    const newSnapshot = await buildSnapshot(tmuxSessions, stateFiles);
 
-  if (snapshotChanged(currentSnapshot, newSnapshot)) {
-    updateDb(currentSnapshot, newSnapshot);
-    currentSnapshot = newSnapshot;
-    broadcast({ type: "session-statuses", statuses: newSnapshot });
+    if (snapshotChanged(currentSnapshot, newSnapshot)) {
+      updateDb(currentSnapshot, newSnapshot);
+      currentSnapshot = newSnapshot;
+      broadcast({ type: "session-statuses", statuses: newSnapshot });
+    }
+  } finally {
+    tickInProgress = false;
+    if (tickPending) {
+      tickPending = false;
+      tick().catch(console.error);
+    }
   }
 }
 

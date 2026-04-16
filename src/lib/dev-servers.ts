@@ -8,6 +8,7 @@ import {
   type DevServerType,
   type DevServerStatus,
 } from "./db";
+import { networkInfo } from "./network-info";
 
 const execAsync = promisify(exec);
 
@@ -54,30 +55,13 @@ async function isPidRunning(pid: number): Promise<boolean> {
   }
 }
 
-// Detect which TCP ports a process is listening on via lsof
 async function detectListeningPorts(
   pid: number,
   retries = 5
 ): Promise<number[]> {
   for (let i = 0; i < retries; i++) {
-    try {
-      const { stdout } = await execAsync(
-        `lsof -P -iTCP -sTCP:LISTEN -a -p ${pid} -Fn 2>/dev/null || true`
-      );
-      const ports = [
-        ...new Set(
-          stdout
-            .split("\n")
-            .filter((line) => line.startsWith("n"))
-            .map((line) => parseInt(line.slice(line.lastIndexOf(":") + 1), 10))
-            .filter((port) => !isNaN(port) && port > 0)
-        ),
-      ].sort((a, b) => a - b);
-
-      if (ports.length > 0) return ports;
-    } catch {
-      // lsof failed, retry
-    }
+    const ports = await networkInfo.getPortsForPid(pid);
+    if (ports.length > 0) return ports;
     if (i < retries - 1) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -141,14 +125,15 @@ export async function getServerStatus(
 export async function getAllServers(): Promise<DevServer[]> {
   const servers = await queries.getAllDevServers();
 
-  // Update status for each server
-  for (const server of servers) {
-    const liveStatus = await getServerStatus(server);
-    if (liveStatus !== server.status) {
-      await queries.updateDevServerStatus(liveStatus, server.id);
-      server.status = liveStatus;
-    }
-  }
+  await Promise.all(
+    servers.map(async (server) => {
+      const liveStatus = await getServerStatus(server);
+      if (liveStatus !== server.status) {
+        await queries.updateDevServerStatus(liveStatus, server.id);
+        server.status = liveStatus;
+      }
+    })
+  );
 
   return servers;
 }
@@ -159,13 +144,15 @@ export async function getServersByProject(
 ): Promise<DevServer[]> {
   const servers = await queries.getDevServersByProject(projectId);
 
-  for (const server of servers) {
-    const liveStatus = await getServerStatus(server);
-    if (liveStatus !== server.status) {
-      await queries.updateDevServerStatus(liveStatus, server.id);
-      server.status = liveStatus;
-    }
-  }
+  await Promise.all(
+    servers.map(async (server) => {
+      const liveStatus = await getServerStatus(server);
+      if (liveStatus !== server.status) {
+        await queries.updateDevServerStatus(liveStatus, server.id);
+        server.status = liveStatus;
+      }
+    })
+  );
 
   return servers;
 }
@@ -517,11 +504,12 @@ export async function detectServers(
 export async function cleanupOrphanedServers(): Promise<void> {
   const servers = await queries.getAllDevServers();
 
-  for (const server of servers) {
-    const liveStatus = await getServerStatus(server);
-    if (server.status === "running" && liveStatus === "stopped") {
-      // Server was running but is now dead
-      await queries.updateDevServerStatus("stopped", server.id);
-    }
-  }
+  await Promise.all(
+    servers.map(async (server) => {
+      const liveStatus = await getServerStatus(server);
+      if (server.status === "running" && liveStatus === "stopped") {
+        await queries.updateDevServerStatus("stopped", server.id);
+      }
+    })
+  );
 }

@@ -4,11 +4,8 @@
  * Assigns unique ports to worktree sessions to avoid conflicts.
  */
 
-import { exec } from "child_process";
-import { promisify } from "util";
 import { queries } from "./db";
-
-const execAsync = promisify(exec);
+import { isPortAvailable } from "./network-info";
 
 // Port range for dev servers
 const BASE_PORT = 3100;
@@ -19,15 +16,7 @@ const MAX_PORT = 3900;
  * Check if a port is in use
  */
 export async function isPortInUse(port: number): Promise<boolean> {
-  try {
-    const { stdout } = await execAsync(
-      `lsof -i :${port} -sTCP:LISTEN 2>/dev/null | head -1`,
-      { timeout: 5000 }
-    );
-    return stdout.trim().length > 0;
-  } catch {
-    return false;
-  }
+  return !(await isPortAvailable(port));
 }
 
 /**
@@ -43,17 +32,20 @@ export async function getAssignedPorts(): Promise<number[]> {
 export async function findAvailablePort(): Promise<number> {
   const assignedPorts = new Set(await getAssignedPorts());
 
+  const candidates: number[] = [];
   for (let port = BASE_PORT; port <= MAX_PORT; port += PORT_INCREMENT) {
-    // Skip if already assigned to a session
-    if (assignedPorts.has(port)) {
-      continue;
-    }
-
-    // Check if port is actually in use (by something outside ClaudeDeck)
-    if (!(await isPortInUse(port))) {
-      return port;
-    }
+    if (!assignedPorts.has(port)) candidates.push(port);
   }
+
+  const results = await Promise.all(
+    candidates.map(async (port) => ({
+      port,
+      available: await isPortAvailable(port),
+    }))
+  );
+
+  const found = results.find((r) => r.available);
+  if (found) return found.port;
 
   // Fallback: return a random port in range
   return BASE_PORT + Math.floor(Math.random() * 80) * PORT_INCREMENT;
