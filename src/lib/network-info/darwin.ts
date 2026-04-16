@@ -4,34 +4,20 @@ import type { NetworkInfoProvider, ListeningSocket } from "./types";
 
 const execAsync = promisify(exec);
 
-function parseNetstatOutput(stdout: string): ListeningSocket[] {
-  const results: ListeningSocket[] = [];
-  const seen = new Set<string>();
+/**
+ * macOS backend for network info.
+ *
+ * macOS has no /proc filesystem and `netstat` does not reliably expose PIDs
+ * across all versions. `lsof` is the only portable tool for PID-to-port
+ * mapping on macOS.
+ *
+ * To minimize overhead, this module caches the full listener scan for 500ms
+ * so multiple calls within the same tick reuse a single lsof invocation
+ * (mirrors the micro-cache pattern in the Linux /proc backend).
+ */
 
-  for (const line of stdout.split("\n")) {
-    if (!line.includes("LISTEN")) continue;
-
-    const fields = line.trim().split(/\s+/);
-    if (fields.length < 9) continue;
-
-    const localAddr = fields[3];
-    const lastDot = localAddr.lastIndexOf(".");
-    if (lastDot === -1) continue;
-
-    const port = parseInt(localAddr.slice(lastDot + 1), 10);
-    const pid = parseInt(fields[8], 10);
-
-    if (isNaN(port) || port <= 0 || isNaN(pid) || pid <= 0) continue;
-
-    const key = `${pid}:${port}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      results.push({ pid, port });
-    }
-  }
-
-  return results;
-}
+let listenerCache: { data: ListeningSocket[]; ts: number } | null = null;
+const CACHE_TTL = 500;
 
 function parseLsofListeners(stdout: string): ListeningSocket[] {
   const results: ListeningSocket[] = [];
@@ -56,26 +42,19 @@ function parseLsofListeners(stdout: string): ListeningSocket[] {
   return results;
 }
 
-async function getAllListenersViaNetstat(): Promise<ListeningSocket[]> {
-  try {
-    const { stdout } = await execAsync(
-      `netstat -anv -p tcp 2>/dev/null || true`
-    );
-    const results = parseNetstatOutput(stdout);
-    if (results.length > 0) return results;
-  } catch {
-    // netstat failed
+async function getCachedListeners(): Promise<ListeningSocket[]> {
+  const now = Date.now();
+  if (listenerCache && now - listenerCache.ts < CACHE_TTL) {
+    return listenerCache.data;
   }
 
-  return getAllListenersViaLsof();
-}
-
-async function getAllListenersViaLsof(): Promise<ListeningSocket[]> {
   try {
     const { stdout } = await execAsync(
       `lsof -P -iTCP -sTCP:LISTEN -Fn 2>/dev/null || true`
     );
-    return parseLsofListeners(stdout);
+    const data = parseLsofListeners(stdout);
+    listenerCache = { data, ts: now };
+    return data;
   } catch {
     return [];
   }
@@ -83,25 +62,14 @@ async function getAllListenersViaLsof(): Promise<ListeningSocket[]> {
 
 const provider: NetworkInfoProvider = {
   async getAllListeners(): Promise<ListeningSocket[]> {
-    return getAllListenersViaNetstat();
+    return getCachedListeners();
   },
 
   async getPortsForPid(pid: number): Promise<number[]> {
-    try {
-      const { stdout } = await execAsync(
-        `lsof -P -iTCP -sTCP:LISTEN -a -p ${pid} -Fn 2>/dev/null || true`
-      );
-      const ports = new Set<number>();
-      for (const line of stdout.split("\n")) {
-        if (line.startsWith("n")) {
-          const port = parseInt(line.slice(line.lastIndexOf(":") + 1), 10);
-          if (!isNaN(port) && port > 0) ports.add(port);
-        }
-      }
-      return [...ports].sort((a, b) => a - b);
-    } catch {
-      return [];
-    }
+    const all = await getCachedListeners();
+    return [
+      ...new Set(all.filter((s) => s.pid === pid).map((s) => s.port)),
+    ].sort((a, b) => a - b);
   },
 
   async resolveCwds(pids: number[]): Promise<Map<number, string>> {
