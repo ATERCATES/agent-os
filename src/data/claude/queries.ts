@@ -8,6 +8,8 @@ export interface ClaudeProject {
   sessionCount: number;
   lastActivity: string;
   hidden: boolean;
+  parentRoot: string | null;
+  isWorktree: boolean;
 }
 
 export interface ClaudeSession {

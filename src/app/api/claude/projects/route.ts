@@ -9,6 +9,8 @@ export interface ClaudeProject {
   sessionCount: number;
   lastActivity: string | null;
   hidden: boolean;
+  parentRoot: string | null;
+  isWorktree: boolean;
 }
 
 export async function GET() {
