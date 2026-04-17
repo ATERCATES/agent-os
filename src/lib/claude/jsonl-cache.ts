@@ -29,6 +29,7 @@ function deriveDisplayName(directory: string | null, encoded: string): string {
 
 let projectsData: CachedProject[] | null = null;
 let projectsBuilding: Promise<CachedProject[]> | null = null;
+let invalidationTick = 0;
 
 async function buildProjects(): Promise<CachedProject[]> {
   const projectNames = getClaudeProjectNames();
@@ -105,17 +106,31 @@ async function buildProjects(): Promise<CachedProject[]> {
   });
 }
 
+// Hard cap on retries so a pathological invalidation storm cannot spin forever.
+const MAX_REBUILD_RETRIES = 5;
+
 export async function getCachedProjects(): Promise<CachedProject[]> {
   if (projectsData) return projectsData;
   if (projectsBuilding) return projectsBuilding;
 
-  projectsBuilding = buildProjects();
-  try {
-    projectsData = await projectsBuilding;
-  } finally {
-    projectsBuilding = null;
+  for (let attempt = 0; attempt <= MAX_REBUILD_RETRIES; attempt++) {
+    const startTick = invalidationTick;
+    projectsBuilding = buildProjects();
+    let result: CachedProject[];
+    try {
+      result = await projectsBuilding;
+    } finally {
+      projectsBuilding = null;
+    }
+    if (invalidationTick === startTick || attempt === MAX_REBUILD_RETRIES) {
+      projectsData = result;
+      return projectsData;
+    }
+    // Invalidation arrived during the build — the result is already stale;
+    // drop it and rebuild from current filesystem state.
   }
-  return projectsData;
+  // Unreachable: the loop always exits via the return inside it.
+  throw new Error("getCachedProjects: unreachable");
 }
 
 export async function getCachedSessions(
@@ -127,5 +142,6 @@ export async function getCachedSessions(
 
 export function invalidateAllProjects(): void {
   projectsData = null;
+  invalidationTick++;
   invalidateRepoIdentityCache();
 }
