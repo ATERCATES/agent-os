@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ChevronDown,
   FolderOpen,
+  GitBranch,
   Plus,
   Eye,
   EyeOff,
@@ -93,7 +94,11 @@ export function ClaudeProjectCard({
           <ChevronRight className="text-muted-foreground h-4 w-4" />
         )}
       </button>
-      <FolderOpen className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
+      {project.isWorktree ? (
+        <GitBranch className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />
+      ) : (
+        <FolderOpen className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
+      )}
       <TruncatedText
         text={project.displayName}
         className="min-w-0 flex-1 text-sm font-medium"
