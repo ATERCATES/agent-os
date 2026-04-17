@@ -39,6 +39,28 @@ export function useDeleteSession() {
   });
 }
 
+export function useKillTmuxSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const res = await fetch(`/api/tmux/kill/${sessionId}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(data.error || "Failed to kill session");
+      }
+      return res.json() as Promise<{ success: true; killed: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
+    },
+  });
+}
+
 export function useRenameSession() {
   const queryClient = useQueryClient();
 

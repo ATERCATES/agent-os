@@ -3,6 +3,7 @@ export {
   useSessionsQuery,
   useCreateSession,
   useDeleteSession,
+  useKillTmuxSession,
   useRenameSession,
   useForkSession,
   useSummarizeSession,

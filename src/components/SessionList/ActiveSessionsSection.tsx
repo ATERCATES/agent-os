@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   ChevronRight,
@@ -13,6 +14,7 @@ import {
   Loader2,
   Copy,
   Check,
+  PowerOff,
 } from "lucide-react";
 import type { SessionStatus } from "@/components/views/types";
 import {
@@ -20,6 +22,7 @@ import {
   useStartTunnel,
   useStopTunnel,
 } from "@/data/tunnels/queries";
+import { useKillTmuxSession } from "@/data/sessions";
 
 interface ActiveSessionsSectionProps {
   sessionStatuses: Record<string, SessionStatus>;
@@ -60,6 +63,29 @@ export function ActiveSessionsSection({
   const { data: cfStatus } = useCloudflaredStatus();
   const cloudflaredInstalled = cfStatus?.installed ?? false;
 
+  const killSession = useKillTmuxSession();
+  const [killingId, setKillingId] = useState<string | null>(null);
+
+  const handleKill = useCallback(
+    (sessionId: string, sessionName: string) => (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (killingId) return;
+      setKillingId(sessionId);
+      killSession.mutate(sessionId, {
+        onSuccess: () => {
+          toast.success(`Killed “${sessionName}”`);
+        },
+        onError: (err) => {
+          toast.error(err.message || "Failed to kill session");
+        },
+        onSettled: () => {
+          setKillingId((current) => (current === sessionId ? null : current));
+        },
+      });
+    },
+    [killSession, killingId]
+  );
+
   if (activeSessions.length === 0) return null;
 
   return (
@@ -94,38 +120,63 @@ export function ActiveSessionsSection({
 
       {expanded && (
         <div className="space-y-0.5 px-1.5">
-          {activeSessions.map((session) => (
-            <button
-              key={session.id}
-              onClick={() => onSelect(session.id)}
-              className="hover:bg-accent group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors"
-            >
-              <StatusIcon status={session.status} />
-              <div className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-medium">
-                  {session.sessionName}
-                </span>
-                {session.lastLine && (
-                  <span className="text-muted-foreground block truncate font-mono text-[10px]">
-                    {session.lastLine}
-                  </span>
-                )}
-                {session.listeningPorts &&
-                  session.listeningPorts.length > 0 && (
-                    <div className="mt-0.5 space-y-0.5">
-                      {session.listeningPorts.map((port) => (
-                        <PortBadge
-                          key={port}
-                          port={port}
-                          tunnelUrl={session.tunnelUrls?.[port]}
-                          cloudflaredInstalled={cloudflaredInstalled}
-                        />
-                      ))}
-                    </div>
+          {activeSessions.map((session) => {
+            const isKilling = killingId === session.id;
+            return (
+              <div
+                key={session.id}
+                className="hover:bg-accent group relative flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors"
+              >
+                <button
+                  onClick={() => onSelect(session.id)}
+                  className="flex min-w-0 flex-1 items-start gap-2 text-left"
+                >
+                  <StatusIcon status={session.status} />
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-medium">
+                      {session.sessionName}
+                    </span>
+                    {session.lastLine && (
+                      <span className="text-muted-foreground block truncate font-mono text-[10px]">
+                        {session.lastLine}
+                      </span>
+                    )}
+                    {session.listeningPorts &&
+                      session.listeningPorts.length > 0 && (
+                        <div className="mt-0.5 space-y-0.5">
+                          {session.listeningPorts.map((port) => (
+                            <PortBadge
+                              key={port}
+                              port={port}
+                              tunnelUrl={session.tunnelUrls?.[port]}
+                              cloudflaredInstalled={cloudflaredInstalled}
+                            />
+                          ))}
+                        </div>
+                      )}
+                  </div>
+                </button>
+                <button
+                  onClick={handleKill(session.id, session.sessionName)}
+                  disabled={isKilling}
+                  title="Kill session"
+                  aria-label={`Kill session ${session.sessionName}`}
+                  className={cn(
+                    "text-muted-foreground hover:bg-destructive/15 hover:text-destructive flex h-5 w-5 flex-shrink-0 items-center justify-center rounded transition-all",
+                    isKilling
+                      ? "opacity-100"
+                      : "opacity-0 group-hover:opacity-100 focus:opacity-100"
                   )}
+                >
+                  {isKilling ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <PowerOff className="h-3 w-3" />
+                  )}
+                </button>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
