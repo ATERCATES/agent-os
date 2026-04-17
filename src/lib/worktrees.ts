@@ -2,7 +2,7 @@
  * Git Worktree management for isolated feature development
  */
 
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import * as path from "path";
 import * as fs from "fs";
@@ -16,6 +16,7 @@ import {
 } from "./git";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 // Base directory for all worktrees
 const WORKTREES_DIR = path.join(os.homedir(), ".claude-deck", "worktrees");
@@ -277,56 +278,61 @@ export interface RepoIdentity {
 }
 
 const repoIdentityCache = new Map<string, RepoIdentity | null>();
+const repoIdentityPending = new Map<string, Promise<RepoIdentity | null>>();
 
-/**
- * Detect whether a directory is a plain git repo or a worktree, and
- * return its parent repo root when applicable. Returns null if git is
- * unavailable or the path is not a git working tree.
- */
 export async function resolveRepoIdentity(
   cwd: string
 ): Promise<RepoIdentity | null> {
   const cached = repoIdentityCache.get(cwd);
   if (cached !== undefined) return cached;
 
-  try {
-    const [{ stdout: topStdout }, { stdout: commonStdout }] = await Promise.all(
-      [
-        execAsync(
-          `git -C "${cwd}" rev-parse --path-format=absolute --show-toplevel`,
-          { timeout: 2000 }
-        ),
-        execAsync(
-          `git -C "${cwd}" rev-parse --path-format=absolute --git-common-dir`,
-          { timeout: 2000 }
-        ),
-      ]
-    );
+  const pending = repoIdentityPending.get(cwd);
+  if (pending) return pending;
 
-    const repoRoot = topStdout.trim();
-    const commonDir = commonStdout.trim();
-    if (!repoRoot || !commonDir) {
+  const task = (async (): Promise<RepoIdentity | null> => {
+    try {
+      const { stdout } = await execFileAsync(
+        "git",
+        [
+          "-C",
+          cwd,
+          "rev-parse",
+          "--path-format=absolute",
+          "--show-toplevel",
+          "--git-common-dir",
+        ],
+        { timeout: 2000 }
+      );
+      const [repoRoot = "", commonDir = ""] = stdout.trim().split("\n");
+      if (!repoRoot || !commonDir) {
+        repoIdentityCache.set(cwd, null);
+        return null;
+      }
+
+      const standaloneGitDir = path.join(repoRoot, ".git");
+      const isWorktree = commonDir !== standaloneGitDir;
+      const parentRoot = isWorktree
+        ? commonDir.replace(/\/\.git\/?$/, "")
+        : null;
+
+      const identity: RepoIdentity = { repoRoot, parentRoot, isWorktree };
+      repoIdentityCache.set(cwd, identity);
+      return identity;
+    } catch {
       repoIdentityCache.set(cwd, null);
       return null;
     }
+  })();
 
-    const standaloneGitDir = path.join(repoRoot, ".git");
-    const isWorktree = commonDir !== standaloneGitDir;
-    const parentRoot = isWorktree ? commonDir.replace(/\/\.git\/?$/, "") : null;
-
-    const identity: RepoIdentity = { repoRoot, parentRoot, isWorktree };
-    repoIdentityCache.set(cwd, identity);
-    return identity;
-  } catch {
-    repoIdentityCache.set(cwd, null);
-    return null;
+  repoIdentityPending.set(cwd, task);
+  try {
+    return await task;
+  } finally {
+    repoIdentityPending.delete(cwd);
   }
 }
 
-/**
- * Clear the resolveRepoIdentity cache. Called when the Claude projects
- * cache is invalidated.
- */
 export function invalidateRepoIdentityCache(): void {
   repoIdentityCache.clear();
+  repoIdentityPending.clear();
 }
