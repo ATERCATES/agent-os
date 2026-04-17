@@ -18,6 +18,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import { ClaudeSessionCard } from "./ClaudeSessionCard";
 import {
   useClaudeSessionsQuery,
@@ -93,9 +94,10 @@ export function ClaudeProjectCard({
         )}
       </button>
       <FolderOpen className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">
-        {project.displayName}
-      </span>
+      <TruncatedText
+        text={project.displayName}
+        className="min-w-0 flex-1 text-sm font-medium"
+      />
       <span className="text-muted-foreground flex-shrink-0 text-[10px]">
         {project.sessionCount}
       </span>

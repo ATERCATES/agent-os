@@ -23,6 +23,7 @@ import {
   useStopTunnel,
 } from "@/data/tunnels/queries";
 import { useKillTmuxSession } from "@/data/sessions";
+import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface ActiveSessionsSectionProps {
   sessionStatuses: Record<string, SessionStatus>;
@@ -133,9 +134,10 @@ export function ActiveSessionsSection({
                 >
                   <StatusIcon status={session.status} />
                   <div className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-medium">
-                      {session.sessionName}
-                    </span>
+                    <TruncatedText
+                      text={session.sessionName}
+                      className="block text-xs font-medium"
+                    />
                     {session.lastLine && (
                       <span className="text-muted-foreground block truncate font-mono text-[10px]">
                         {session.lastLine}

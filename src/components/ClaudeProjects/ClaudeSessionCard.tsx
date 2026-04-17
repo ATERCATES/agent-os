@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { MessageSquare, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TruncatedText } from "@/components/ui/truncated-text";
 import type { ClaudeSession } from "@/data/claude";
 
 interface ClaudeSessionCardProps {
@@ -59,9 +60,10 @@ export function ClaudeSessionCard({
       )}
     >
       <MessageSquare className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
-      <span className="flex-1 truncate text-xs">
-        {session.summary || "Untitled session"}
-      </span>
+      <TruncatedText
+        text={session.summary || "Untitled session"}
+        className="flex-1 text-xs"
+      />
       <span className="text-muted-foreground flex-shrink-0 text-[10px]">
         {getTimeAgo(session.lastActivity)}
       </span>
