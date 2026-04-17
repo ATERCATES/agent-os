@@ -328,9 +328,7 @@ export async function resolveRepoIdentity(
 
       const standaloneGitDir = path.join(repoRoot, ".git");
       const isWorktree = commonDir !== standaloneGitDir;
-      const parentRoot = isWorktree
-        ? commonDir.replace(/\/\.git\/?$/, "")
-        : null;
+      const parentRoot = isWorktree ? path.dirname(commonDir) : null;
 
       const identity: RepoIdentity = { repoRoot, parentRoot, isWorktree };
       repoIdentityCache.set(cwd, identity);
