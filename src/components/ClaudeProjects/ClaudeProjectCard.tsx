@@ -14,6 +14,7 @@ import {
   Loader2,
   Copy,
   ExternalLink,
+  Pencil,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,6 @@ import {
 } from "@/data/claude";
 import { useProjectExpansion } from "@/hooks/useProjectExpansion";
 import type { ClaudeProject, WorktreeSummary } from "@/data/claude";
-import { Pencil } from "lucide-react";
 
 const ABANDONED_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -114,9 +114,9 @@ export function ClaudeProjectCard({
     if (!project.directory) return;
     try {
       await navigator.clipboard.writeText(project.directory);
-      toast.success("Path copiado");
+      toast.success("Path copied");
     } catch {
-      toast.error("No se pudo copiar");
+      toast.error("Failed to copy");
     }
   };
 
@@ -136,34 +136,34 @@ export function ClaudeProjectCard({
           {editors?.vscode && (
             <ContextMenuItem onClick={() => handleOpenInEditor("vscode")}>
               <ExternalLink className="mr-2 h-3 w-3" />
-              Abrir en VS Code
+              Open in VS Code
             </ContextMenuItem>
           )}
           {editors?.cursor && (
             <ContextMenuItem onClick={() => handleOpenInEditor("cursor")}>
               <ExternalLink className="mr-2 h-3 w-3" />
-              Abrir en Cursor
+              Open in Cursor
             </ContextMenuItem>
           )}
           <ContextMenuItem onClick={() => handleOpenInEditor("finder")}>
             <ExternalLink className="mr-2 h-3 w-3" />
-            Abrir en Finder
+            Open in Finder
           </ContextMenuItem>
           <ContextMenuItem onClick={handleCopyPath}>
             <Copy className="mr-2 h-3 w-3" />
-            Copiar path
+            Copy path
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onClick={() => setShowRenameDialog(true)}>
             <Pencil className="mr-2 h-3 w-3" />
-            Renombrar rama…
+            Rename branch…
           </ContextMenuItem>
           <ContextMenuItem
             onClick={() => setShowDeleteDialog(true)}
             className="text-red-600 focus:text-red-600"
           >
             <Trash2 className="mr-2 h-3 w-3" />
-            Eliminar worktree…
+            Delete worktree…
           </ContextMenuItem>
           <ContextMenuSeparator />
         </>
@@ -187,7 +187,7 @@ export function ClaudeProjectCard({
             className="text-red-600 focus:text-red-600"
           >
             <Trash2 className="mr-2 h-3 w-3" />
-            Eliminar proyecto…
+            Delete project…
           </ContextMenuItem>
         </>
       )}
@@ -226,7 +226,7 @@ export function ClaudeProjectCard({
           {summary.dirty && (
             <span
               className="h-1.5 w-1.5 rounded-full bg-amber-500"
-              title="Cambios sin commitear"
+              title="Uncommitted changes"
             />
           )}
           {summary.ahead > 0 && (
@@ -287,16 +287,17 @@ export function ClaudeProjectCard({
           </div>
         )}
         <div className="text-muted-foreground">
-          Creado {new Date(summary.createdAt).toLocaleDateString()}
+          Created {new Date(summary.createdAt).toLocaleDateString()}
         </div>
         {isAbandoned && (
-          <div className="text-amber-500">
-            Sin sesiones recientes (14+ días)
-          </div>
+          <div className="text-amber-500">No recent sessions (14+ days)</div>
         )}
       </div>
     ) : null;
 
+  // The wrapper <div> gives ContextMenuTrigger asChild a concrete DOM node to
+  // forward events to — Tooltip Root does not render DOM itself, so without
+  // this wrapper right-clicks never reached masterRow.
   const triggerRow = tooltipContent ? (
     <div>
       <Tooltip>
@@ -330,7 +331,7 @@ export function ClaudeProjectCard({
                 <ChevronRight className="text-muted-foreground h-3 w-3" />
               )}
               <span className="text-muted-foreground font-medium">
-                Sesiones ({sessionCount})
+                Sessions ({sessionCount})
               </span>
             </div>
           )}
@@ -424,6 +425,7 @@ export function ClaudeProjectCard({
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
           worktree={project}
+          summary={summary}
         />
       )}
       {showRenameDialog && (

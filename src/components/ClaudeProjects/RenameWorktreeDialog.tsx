@@ -49,12 +49,12 @@ export function RenameWorktreeDialog({
       },
       {
         onSuccess: () => {
-          toast.success("Rama renombrada");
+          toast.success("Branch renamed");
           onOpenChange(false);
           setValue("");
         },
         onError: (err) => {
-          toast.error(err.message || "No se pudo renombrar");
+          toast.error(err.message || "Failed to rename");
         },
       }
     );
@@ -64,22 +64,21 @@ export function RenameWorktreeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Renombrar rama</DialogTitle>
+          <DialogTitle>Rename branch</DialogTitle>
           <DialogDescription>
-            El directorio del worktree no cambia, solo el nombre de la rama git.
+            The worktree directory stays in place; only the git branch name
+            changes.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <div className="text-muted-foreground mb-1 text-xs">
-              Rama actual
+              Current branch
             </div>
             <div className="font-mono text-sm">{worktree.displayName}</div>
           </div>
           <div className="space-y-1">
-            <label className="text-muted-foreground text-xs">
-              Nuevo nombre
-            </label>
+            <label className="text-muted-foreground text-xs">New name</label>
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
@@ -87,7 +86,7 @@ export function RenameWorktreeDialog({
               autoFocus
             />
             {preview && (
-              <p className="text-muted-foreground text-xs">Rama: {preview}</p>
+              <p className="text-muted-foreground text-xs">Branch: {preview}</p>
             )}
           </div>
           <DialogFooter>
@@ -97,13 +96,13 @@ export function RenameWorktreeDialog({
               onClick={() => onOpenChange(false)}
               disabled={renameMutation.isPending}
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={!preview || renameMutation.isPending}
             >
-              {renameMutation.isPending ? "Renombrando…" : "Renombrar"}
+              {renameMutation.isPending ? "Renaming…" : "Rename"}
             </Button>
           </DialogFooter>
         </form>

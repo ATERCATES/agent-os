@@ -38,11 +38,11 @@ export function DeleteProjectDialog({
       },
       {
         onSuccess: () => {
-          toast.success("Proyecto eliminado de Claude");
+          toast.success("Project deleted from Claude");
           onOpenChange(false);
         },
         onError: (err) => {
-          toast.error(err.message || "No se pudo eliminar");
+          toast.error(err.message || "Failed to delete");
         },
       }
     );
@@ -52,16 +52,16 @@ export function DeleteProjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Eliminar proyecto de Claude</DialogTitle>
+          <DialogTitle>Delete Claude project</DialogTitle>
           <DialogDescription>
-            Se borrarán las sesiones JSONL de Claude Code para este proyecto. El
-            código fuente en disco NO se toca.
+            Removes this project&apos;s JSONL sessions from Claude Code. The
+            source code on disk is NOT touched.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 text-sm">
           <div>
-            <div className="text-muted-foreground text-xs">Proyecto</div>
+            <div className="text-muted-foreground text-xs">Project</div>
             <div className="font-mono">{project.displayName}</div>
           </div>
           {project.directory && (
@@ -76,9 +76,9 @@ export function DeleteProjectDialog({
           <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-600" />
             <span>
-              Esto borra el historial de sesiones Claude de{" "}
-              <span className="font-mono">~/.claude/projects/</span>. El
-              directorio del código no se elimina.
+              Deletes the Claude session history under{" "}
+              <span className="font-mono">~/.claude/projects/</span>. The source
+              directory itself is not removed.
             </span>
           </div>
 
@@ -91,10 +91,10 @@ export function DeleteProjectDialog({
                 className="border-border bg-background accent-primary mt-0.5 h-4 w-4 rounded"
               />
               <span>
-                Eliminar también los {worktreeChildren.length} worktree(s) de
-                este proyecto (carpetas en{" "}
+                Also delete this project&apos;s {worktreeChildren.length}{" "}
+                worktree(s) (folders under{" "}
                 <span className="font-mono">~/.claude-deck/worktrees/</span>,
-                ramas git y sus sesiones).
+                their local branches, and their sessions).
               </span>
             </label>
           )}
@@ -107,7 +107,7 @@ export function DeleteProjectDialog({
             onClick={() => onOpenChange(false)}
             disabled={deleteProject.isPending}
           >
-            Cancelar
+            Cancel
           </Button>
           <Button
             type="button"
@@ -115,7 +115,7 @@ export function DeleteProjectDialog({
             onClick={handleDelete}
             disabled={deleteProject.isPending}
           >
-            {deleteProject.isPending ? "Eliminando…" : "Eliminar"}
+            {deleteProject.isPending ? "Deleting…" : "Delete"}
           </Button>
         </DialogFooter>
       </DialogContent>
