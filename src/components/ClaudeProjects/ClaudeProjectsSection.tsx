@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { ChevronsDownUp, Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   useClaudeProjectsQuery,
   useClaudeUpdates,
+  useWorktreeStatuses,
   type ClaudeProject,
+  type WorktreeSummary,
 } from "@/data/claude";
 import { ClaudeProjectCard } from "./ClaudeProjectCard";
+import { collapseAllProjects } from "@/hooks/useProjectExpansion";
 
 interface ClaudeProjectsSectionProps {
   onSelectSession?: (
@@ -87,6 +90,19 @@ export function ClaudeProjectsSection({
     return groupByParent(visible);
   }, [projects, showHidden]);
 
+  const worktreePaths = useMemo(
+    () =>
+      groups.flatMap(
+        (g) => g.children.map((c) => c.directory).filter(Boolean) as string[]
+      ),
+    [groups]
+  );
+  const { data: statuses = [] } = useWorktreeStatuses(worktreePaths);
+  const worktreeStatuses = useMemo<Map<string, WorktreeSummary>>(
+    () => new Map(statuses.map((s) => [s.path, s])),
+    [statuses]
+  );
+
   const hiddenCount = projects.filter((p) => p.hidden).length;
 
   return (
@@ -99,6 +115,14 @@ export function ClaudeProjectsSection({
           {isPending && (
             <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
           )}
+          <button
+            onClick={collapseAllProjects}
+            title="Collapse all"
+            aria-label="Collapse all projects"
+            className="text-muted-foreground hover:text-foreground p-0.5"
+          >
+            <ChevronsDownUp size={14} />
+          </button>
           {hiddenCount > 0 && (
             <button
               onClick={() => setShowHidden(!showHidden)}
@@ -114,27 +138,15 @@ export function ClaudeProjectsSection({
 
       <div className="space-y-0.5">
         {groups.map((group) => (
-          <div key={group.parent.name}>
-            <ClaudeProjectCard
-              project={group.parent}
-              showHidden={showHidden}
-              onSelectSession={onSelectSession}
-              onNewSession={onNewSession}
-            />
-            {group.children.length > 0 && (
-              <div className="border-border/30 ml-3 space-y-0.5 border-l pl-1.5">
-                {group.children.map((child) => (
-                  <ClaudeProjectCard
-                    key={child.name}
-                    project={child}
-                    showHidden={showHidden}
-                    onSelectSession={onSelectSession}
-                    onNewSession={onNewSession}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          <ClaudeProjectCard
+            key={group.parent.name}
+            project={group.parent}
+            worktreeChildren={group.children}
+            worktreeStatuses={worktreeStatuses}
+            showHidden={showHidden}
+            onSelectSession={onSelectSession}
+            onNewSession={onNewSession}
+          />
         ))}
       </div>
     </div>

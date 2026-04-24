@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { ExternalEditorAvailability } from "@/lib/external-editors";
 import { claudeKeys } from "./keys";
+
+export type { ExternalEditorAvailability };
 
 export interface ClaudeProject {
   name: string;
@@ -112,6 +115,171 @@ export function useUnhideItem() {
         body: JSON.stringify({ itemType, itemId }),
       });
       if (!res.ok) throw new Error("Failed to unhide item");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: claudeKeys.projects() });
+      queryClient.invalidateQueries({ queryKey: claudeKeys.all });
+    },
+  });
+}
+
+async function fetchExternalEditors(): Promise<ExternalEditorAvailability> {
+  const res = await fetch("/api/external-editors");
+  if (!res.ok) throw new Error("Failed to fetch editors");
+  return res.json();
+}
+
+export function useExternalEditors() {
+  return useQuery({
+    queryKey: ["external-editors"],
+    queryFn: fetchExternalEditors,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+export function useOpenInEditor() {
+  return useMutation({
+    mutationFn: async ({
+      path,
+      editor,
+    }: {
+      path: string;
+      editor: "vscode" | "cursor" | "finder";
+    }) => {
+      const res = await fetch("/api/open", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path, editor }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to open");
+      }
+      return res.json();
+    },
+  });
+}
+
+export function useDeleteWorktree() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      worktreePath,
+      projectPath,
+      deleteBranch,
+    }: {
+      worktreePath: string;
+      projectPath: string;
+      deleteBranch: boolean;
+    }) => {
+      const res = await fetch("/api/worktrees", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ worktreePath, projectPath, deleteBranch }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to delete worktree");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: claudeKeys.projects() });
+      queryClient.invalidateQueries({ queryKey: claudeKeys.all });
+    },
+  });
+}
+
+export interface WorktreeSummary {
+  path: string;
+  dirty: boolean;
+  ahead: number;
+  behind: number;
+  branchName: string;
+  lastCommitSubject: string;
+  lastCommitRelative: string;
+  createdAt: number;
+  activeSessions: number;
+}
+
+async function fetchWorktreeStatuses(
+  paths: string[]
+): Promise<WorktreeSummary[]> {
+  const res = await fetch("/api/worktrees/statuses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paths }),
+  });
+  if (!res.ok) throw new Error("Failed to fetch statuses");
+  return res.json();
+}
+
+export function useWorktreeStatuses(paths: string[]) {
+  // Sort the key so an order change from the API or the grouping logic does
+  // not invalidate the cache unnecessarily.
+  const sorted = [...paths].sort();
+  return useQuery({
+    queryKey: ["worktree-statuses", sorted],
+    queryFn: () => fetchWorktreeStatuses(sorted),
+    enabled: sorted.length > 0,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+    retry: false,
+  });
+}
+
+export function useDeleteProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      projectName,
+      includeWorktrees,
+    }: {
+      projectName: string;
+      includeWorktrees: boolean;
+    }) => {
+      const res = await fetch("/api/claude/projects", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectName, includeWorktrees }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to delete project");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: claudeKeys.projects() });
+      queryClient.invalidateQueries({ queryKey: claudeKeys.all });
+    },
+  });
+}
+
+export function useRenameWorktree() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      worktreePath,
+      projectPath,
+      newBranchName,
+    }: {
+      worktreePath: string;
+      projectPath: string;
+      newBranchName: string;
+    }) => {
+      const res = await fetch("/api/worktrees", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ worktreePath, projectPath, newBranchName }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to rename");
+      }
       return res.json();
     },
     onSuccess: () => {

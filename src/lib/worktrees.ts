@@ -228,6 +228,41 @@ export async function deleteWorktree(
 }
 
 /**
+ * Rename the worktree's local branch via `git branch -m`.
+ * Leaves the worktree directory in place; only the branch name changes.
+ */
+export async function renameWorktreeBranch(
+  worktreePath: string,
+  projectPath: string,
+  newBranchName: string
+): Promise<void> {
+  // git ref-name rules: no spaces, control chars, ~^:?*[ ..., leading/trailing
+  // dashes. This is stricter than git itself but safe for a UI-driven rename.
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._/-]{0,99}$/.test(newBranchName)) {
+    throw new Error("Invalid branch name");
+  }
+
+  const resolvedWT = resolvePath(worktreePath);
+  const resolvedProject = resolvePath(projectPath);
+
+  const { stdout } = await execFileAsync(
+    "git",
+    ["-C", resolvedWT, "rev-parse", "--abbrev-ref", "HEAD"],
+    { timeout: 5000 }
+  );
+  const oldBranch = stdout.trim();
+  if (!oldBranch || oldBranch === "HEAD") {
+    throw new Error("Worktree is in a detached HEAD state");
+  }
+
+  await execFileAsync(
+    "git",
+    ["-C", resolvedProject, "branch", "-m", oldBranch, newBranchName],
+    { timeout: 10000 }
+  );
+}
+
+/**
  * List all worktrees for a project
  */
 export async function listWorktrees(projectPath: string): Promise<
@@ -281,6 +316,16 @@ export async function listWorktrees(projectPath: string): Promise<
 export function isClaudeDeckWorktree(worktreePath: string): boolean {
   const resolvedPath = resolvePath(worktreePath);
   return resolvedPath.startsWith(WORKTREES_DIR);
+}
+
+/**
+ * Assert a worktree path is managed by ClaudeDeck. Throws otherwise so
+ * destructive endpoints can bail before touching the filesystem.
+ */
+export function assertManagedWorktree(worktreePath: string): void {
+  if (!isClaudeDeckWorktree(worktreePath)) {
+    throw new Error("worktreePath is outside the ClaudeDeck worktrees dir");
+  }
 }
 
 /**

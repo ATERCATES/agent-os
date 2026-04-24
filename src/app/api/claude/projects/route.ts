@@ -1,5 +1,10 @@
-import { NextResponse } from "next/server";
-import { getCachedProjects } from "@/lib/claude/jsonl-cache";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getCachedProjects,
+  invalidateAllProjects,
+} from "@/lib/claude/jsonl-cache";
+import { assertManagedWorktree, deleteWorktree } from "@/lib/worktrees";
+import { removeClaudeProjectDir } from "@/lib/claude/project-artifacts";
 import { queries } from "@/lib/db";
 
 export interface ClaudeProject {
@@ -40,6 +45,54 @@ export async function GET() {
     return NextResponse.json(
       { error: "Failed to discover projects" },
       { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { projectName, includeWorktrees } = (await request.json()) as {
+      projectName?: string;
+      includeWorktrees?: boolean;
+    };
+    if (!projectName) {
+      return NextResponse.json(
+        { error: "projectName is required" },
+        { status: 400 }
+      );
+    }
+
+    const projects = await getCachedProjects();
+    const target = projects.find((p) => p.name === projectName);
+    if (!target) {
+      return NextResponse.json({ error: "project not found" }, { status: 404 });
+    }
+
+    const failed: string[] = [];
+    if (includeWorktrees && target.directory) {
+      const children = projects.filter(
+        (p) => p.isWorktree && p.parentRoot === target.directory
+      );
+      for (const child of children) {
+        if (!child.directory) continue;
+        try {
+          assertManagedWorktree(child.directory);
+          await deleteWorktree(child.directory, target.directory, true);
+        } catch {
+          failed.push(child.name);
+        }
+        await removeClaudeProjectDir(child.name);
+      }
+    }
+
+    await removeClaudeProjectDir(projectName);
+    invalidateAllProjects();
+    return NextResponse.json({ ok: true, failed });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json(
+      { error: `Failed to delete project: ${message}` },
+      { status: 400 }
     );
   }
 }
