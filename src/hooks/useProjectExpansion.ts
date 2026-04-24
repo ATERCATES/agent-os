@@ -9,11 +9,27 @@ export interface ProjectExpansion {
 }
 
 const STORAGE_PREFIX = "claudedeck:expanded:";
+const RESET_EVENT = "claudedeck:expansion-reset";
 const DEFAULT: ProjectExpansion = {
   master: false,
   sessions: false,
   worktrees: false,
 };
+
+export function collapseAllProjects(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith(STORAGE_PREFIX)) toRemove.push(key);
+    }
+    for (const key of toRemove) window.localStorage.removeItem(key);
+    window.dispatchEvent(new Event(RESET_EVENT));
+  } catch {
+    // ignore
+  }
+}
 
 function read(projectName: string): ProjectExpansion {
   if (typeof window === "undefined") return DEFAULT;
@@ -49,6 +65,13 @@ export function useProjectExpansion(projectName: string) {
   useEffect(() => {
     setExpansion(read(projectName));
   }, [projectName]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => setExpansion(DEFAULT);
+    window.addEventListener(RESET_EVENT, handler);
+    return () => window.removeEventListener(RESET_EVENT, handler);
+  }, []);
 
   const update = useCallback(
     (patch: Partial<ProjectExpansion>) => {

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { ChevronsDownUp, Eye, EyeOff, Loader2 } from "lucide-react";
 import {
   useClaudeProjectsQuery,
   useClaudeUpdates,
   type ClaudeProject,
 } from "@/data/claude";
 import { ClaudeProjectCard } from "./ClaudeProjectCard";
+import { collapseAllProjects } from "@/hooks/useProjectExpansion";
 
 interface ClaudeProjectsSectionProps {
   onSelectSession?: (
@@ -99,6 +100,14 @@ export function ClaudeProjectsSection({
           {isPending && (
             <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
           )}
+          <button
+            onClick={collapseAllProjects}
+            title="Collapse all"
+            aria-label="Collapse all projects"
+            className="text-muted-foreground hover:text-foreground p-0.5"
+          >
+            <ChevronsDownUp size={14} />
+          </button>
           {hiddenCount > 0 && (
             <button
               onClick={() => setShowHidden(!showHidden)}
