@@ -59,9 +59,18 @@ export function ClaudeProjectCard({
 }: ClaudeProjectCardProps) {
   const { expansion, toggleMaster, toggleSessions, toggleWorktrees } =
     useProjectExpansion(project.name);
-  const sessionsEnabled = expansion.master && expansion.sessions;
+  const hasWorktrees = worktreeChildren.length > 0 && !project.isWorktree;
+  const sessionCount = project.sessionCount;
+  const worktreeCount = worktreeChildren.length;
+
+  // Without worktrees the Sessions sub-header is noise — the master chevron
+  // expands sessions directly. So when there are no worktrees, treat master
+  // open as sessions open.
+  const sessionsOpen = hasWorktrees ? expansion.sessions : expansion.master;
+  const sessionsQueryEnabled = expansion.master && sessionsOpen;
+
   const { data: sessionsData, isPending: isSessionsPending } =
-    useClaudeSessionsQuery(sessionsEnabled ? project.name : null);
+    useClaudeSessionsQuery(sessionsQueryEnabled ? project.name : null);
   const hideItem = useHideItem();
   const unhideItem = useUnhideItem();
   const { data: editors } = useExternalEditors();
@@ -72,10 +81,6 @@ export function ClaudeProjectCard({
   const filteredSessions = showHidden
     ? sessions
     : sessions.filter((s) => !s.hidden);
-
-  const hasWorktrees = worktreeChildren.length > 0 && !project.isWorktree;
-  const sessionCount = project.sessionCount;
-  const worktreeCount = worktreeChildren.length;
 
   const handleHideProject = () =>
     hideItem.mutate({ itemType: "project", itemId: project.name });
@@ -220,21 +225,23 @@ export function ClaudeProjectCard({
 
       {expansion.master && (
         <div className="border-border/30 ml-3 space-y-0.5 border-l pl-1.5">
-          <div
-            onClick={toggleSessions}
-            className="hover:bg-accent/30 flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs"
-          >
-            {expansion.sessions ? (
-              <ChevronDown className="text-muted-foreground h-3 w-3" />
-            ) : (
-              <ChevronRight className="text-muted-foreground h-3 w-3" />
-            )}
-            <span className="text-muted-foreground font-medium">
-              Sesiones ({sessionCount})
-            </span>
-          </div>
-          {expansion.sessions && (
-            <div className="space-y-px pl-3">
+          {hasWorktrees && (
+            <div
+              onClick={toggleSessions}
+              className="hover:bg-accent/30 flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs"
+            >
+              {expansion.sessions ? (
+                <ChevronDown className="text-muted-foreground h-3 w-3" />
+              ) : (
+                <ChevronRight className="text-muted-foreground h-3 w-3" />
+              )}
+              <span className="text-muted-foreground font-medium">
+                Sesiones ({sessionCount})
+              </span>
+            </div>
+          )}
+          {sessionsOpen && (
+            <div className={hasWorktrees ? "space-y-px pl-3" : "space-y-px"}>
               {isSessionsPending ? (
                 <div className="flex items-center gap-2 px-2 py-2">
                   <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />

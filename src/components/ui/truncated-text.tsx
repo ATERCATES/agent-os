@@ -32,8 +32,16 @@ export function TruncatedText({
     return () => ro.disconnect();
   }, [text]);
 
+  if (!isTruncated) {
+    return (
+      <span ref={ref} className={cn("truncate", className)}>
+        {text}
+      </span>
+    );
+  }
+
   return (
-    <Tooltip open={isTruncated ? undefined : false}>
+    <Tooltip>
       <TooltipTrigger asChild>
         <span ref={ref} className={cn("truncate", className)}>
           {text}
