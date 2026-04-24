@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { ExternalEditorAvailability } from "@/lib/external-editors";
 import { claudeKeys } from "./keys";
+
+export type { ExternalEditorAvailability };
 
 export interface ClaudeProject {
   name: string;
@@ -121,12 +124,6 @@ export function useUnhideItem() {
   });
 }
 
-export interface ExternalEditorAvailability {
-  vscode: boolean;
-  cursor: boolean;
-  finder: boolean;
-}
-
 async function fetchExternalEditors(): Promise<ExternalEditorAvailability> {
   const res = await fetch("/api/external-editors");
   if (!res.ok) throw new Error("Failed to fetch editors");
@@ -162,31 +159,6 @@ export function useOpenInEditor() {
       }
       return res.json();
     },
-  });
-}
-
-export interface WorktreeStatus {
-  dirty: boolean;
-  branchName: string;
-  activeSessions: number;
-  isClaudeDeckManaged: boolean;
-}
-
-async function fetchWorktreeStatus(path: string): Promise<WorktreeStatus> {
-  const res = await fetch(
-    `/api/worktrees/status?path=${encodeURIComponent(path)}`
-  );
-  if (!res.ok) throw new Error("Failed to fetch status");
-  return res.json();
-}
-
-export function useWorktreeStatus(path: string | null) {
-  return useQuery({
-    queryKey: ["worktree-status", path],
-    queryFn: () => fetchWorktreeStatus(path!),
-    enabled: !!path,
-    staleTime: 10_000,
-    retry: false,
   });
 }
 
@@ -245,10 +217,13 @@ async function fetchWorktreeStatuses(
 }
 
 export function useWorktreeStatuses(paths: string[]) {
+  // Sort the key so an order change from the API or the grouping logic does
+  // not invalidate the cache unnecessarily.
+  const sorted = [...paths].sort();
   return useQuery({
-    queryKey: ["worktree-statuses", paths],
-    queryFn: () => fetchWorktreeStatuses(paths),
-    enabled: paths.length > 0,
+    queryKey: ["worktree-statuses", sorted],
+    queryFn: () => fetchWorktreeStatuses(sorted),
+    enabled: sorted.length > 0,
     staleTime: 30_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,

@@ -68,9 +68,10 @@ async function summarise(path: string) {
     if (match) {
       const sessions = await getCachedSessions(match.name);
       const cutoff = Date.now() - ACTIVE_WINDOW_MS;
-      activeSessions = sessions.filter(
-        (s) => Date.parse(s.lastActivity) >= cutoff
-      ).length;
+      activeSessions = sessions.filter((s) => {
+        const ts = Date.parse(s.lastActivity);
+        return Number.isFinite(ts) && ts >= cutoff;
+      }).length;
     }
   } catch {
     // ignore

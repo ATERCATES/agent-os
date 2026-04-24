@@ -6,7 +6,6 @@ export {
   useUnhideItem,
   useExternalEditors,
   useOpenInEditor,
-  useWorktreeStatus,
   useDeleteWorktree,
   useWorktreeStatuses,
   useRenameWorktree,
@@ -16,7 +15,6 @@ export type {
   ClaudeProject,
   ClaudeSession,
   ExternalEditorAvailability,
-  WorktreeStatus,
   WorktreeSummary,
 } from "./queries";
 export { useClaudeUpdates } from "./useClaudeUpdates";
