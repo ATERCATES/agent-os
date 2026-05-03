@@ -45,7 +45,7 @@ themeConfig:
 <div class="hero-meta">
   <span><strong>Javier</strong> · ClaudeDeck</span>
   <span>València · Maig 2026</span>
-  <span class="text-right">01 / 12</span>
+  <span class="text-right">01 / 19</span>
 </div>
 
 </div>
@@ -57,7 +57,7 @@ themeConfig:
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>El moment</div>
-<div class="page-number">02 / 12</div>
+<div class="page-number">02 / 19</div>
 
 <div class="split-asymmetric h-full">
 
@@ -98,7 +98,7 @@ themeConfig:
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>El paradigma</div>
-<div class="page-number">03 / 12</div>
+<div class="page-number">03 / 19</div>
 
 <div class="h-full flex flex-col justify-between">
 
@@ -138,7 +138,7 @@ themeConfig:
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>La infraestructura</div>
-<div class="page-number">04 / 12</div>
+<div class="page-number">04 / 19</div>
 
 <div class="h-full flex flex-col" style="gap: 2.5rem; justify-content: center;">
 
@@ -183,7 +183,7 @@ themeConfig:
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>Demo</div>
-<div class="page-number">05 / 12</div>
+<div class="page-number">05 / 19</div>
 
 <div class="h-full flex flex-col">
 
@@ -239,8 +239,37 @@ themeConfig:
 
 ---
 
+<div class="slide-tag"><span class="accent-dot"></span>Tecnologies</div>
+<div class="page-number">06 / 19</div>
+
+<div class="h-full flex flex-col" style="gap: 1.75rem; justify-content: center;">
+
+<div>
+  <span class="eyebrow">Tecnologies habilitadores digitals</span>
+  <h2>Quines THD activa<br>la <em style="color:var(--accent);font-style:italic;">ialització.</em></h2>
+</div>
+
+<div class="text-sm">
+
+| THD          | Aplicació concreta                                                       | Pes a ClaudeDeck            |
+| ------------ | ------------------------------------------------------------------------ | --------------------------- |
+| **IA / ML**  | Agents que executen tasques amb context. Multi-provider intercanviable.  | **Central** — el cor        |
+| **Cloud**    | Distribució Cloud / Fog / Edge / Mist. Multi-tenant, multi-dispositiu.   | **Alt** — infraestructura   |
+| **Big Data** | Logs JSONL agregats, observabilitat, detecció de patrons d'ús i de cost. | **Mitjà** — observabilitat  |
+| **IoT**      | Sensors hardware dev (GPU, energia), badges per Zero Trust contextual.   | **Baix** — fase 2+ opcional |
+
+</div>
+
+<p style="font-size: 0.85rem; color: var(--text-muted); max-width: 70ch;">
+La ialització no és <em>només</em> IA: és la combinació de IA, Cloud i Big Data en una arquitectura coherent. L'IoT entra en una segona fase per a casos específics.
+</p>
+
+</div>
+
+---
+
 <div class="slide-tag"><span class="accent-dot"></span>Arquitectura</div>
-<div class="page-number">06 / 12</div>
+<div class="page-number">07 / 19</div>
 
 <div class="split-asymmetric-rev h-full">
 
@@ -306,8 +335,173 @@ themeConfig:
 
 ---
 
+<div class="slide-tag"><span class="accent-dot"></span>Dades</div>
+<div class="page-number">08 / 19</div>
+
+<div class="h-full flex flex-col" style="gap: 1.75rem; justify-content: center;">
+
+<div>
+  <span class="eyebrow">Cicle de vida de les dades</span>
+  <h2>Què passa amb el codi<br>i amb els prompts.</h2>
+</div>
+
+<div class="cols-3" style="gap: 0.85rem;">
+
+<div class="card-bordered-accent">
+  <span class="pillar-num">01 / Recollida</span>
+  <h3 style="margin: 0.4rem 0;">Prompts i context</h3>
+  <p style="font-size: 0.75rem; color: var(--text-muted);">Prompts del dev, codi del projecte, context de MCP servers actius.</p>
+</div>
+
+<div class="card-bordered-accent">
+  <span class="pillar-num">02 / Emmagatzematge</span>
+  <h3 style="margin: 0.4rem 0;">Sessions JSONL</h3>
+  <p style="font-size: 0.75rem; color: var(--text-muted);">Al Fog corporatiu. El codi mai surt del servidor de l'empresa.</p>
+</div>
+
+<div class="card-bordered-accent">
+  <span class="pillar-num">03 / Processament</span>
+  <h3 style="margin: 0.4rem 0;">Scrubbing PII</h3>
+  <p style="font-size: 0.75rem; color: var(--text-muted);">Detecció i ofuscació de dades sensibles abans de cap trucada externa.</p>
+</div>
+
+<div class="card-bordered-accent">
+  <span class="pillar-num">04 / Anàlisi</span>
+  <h3 style="margin: 0.4rem 0;">Mètriques agregades</h3>
+  <p style="font-size: 0.75rem; color: var(--text-muted);">Productivitat per equip, cost per projecte, patrons d'ús.</p>
+</div>
+
+<div class="card-bordered-accent">
+  <span class="pillar-num">05 / Visualització</span>
+  <h3 style="margin: 0.4rem 0;">Dashboards</h3>
+  <p style="font-size: 0.75rem; color: var(--text-muted);">Observabilitat per role: dev, lead, finance, compliance.</p>
+</div>
+
+<div class="card-bordered-accent">
+  <span class="pillar-num">06 / Arxiu</span>
+  <h3 style="margin: 0.4rem 0;">Retenció i auditoria</h3>
+  <p style="font-size: 0.75rem; color: var(--text-muted);">Polítiques configurables. Audit log immutable per compliance.</p>
+</div>
+
+</div>
+
+<p style="font-size: 0.78rem; color: var(--text-muted); max-width: 70ch;">
+Totes les etapes succeeixen al <strong>Fog corporatiu</strong>. Només prompts amb scrubbing surten cap al Cloud.
+</p>
+
+</div>
+
+---
+
+<div class="slide-tag"><span class="accent-dot"></span>Seguretat</div>
+<div class="page-number">09 / 19</div>
+
+<div class="split-asymmetric h-full">
+
+<div class="flex flex-col justify-center" style="gap: 1.5rem;">
+  <div>
+    <span class="eyebrow">Zero Trust + RGPD</span>
+    <h2>Compliance<br>per disseny.</h2>
+  </div>
+  <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 32ch;">
+    Verificació contínua, mínim privilegi i microsegmentació aplicades a cada capa de la plataforma.
+  </p>
+  <div class="cols-3" style="gap: 0.6rem;">
+    <div class="compare-cell" style="padding: 0.6rem 0.7rem;">
+      <span class="compare-tag" style="font-size: 0.55rem;">RGPD</span>
+      <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.35;">Drets per disseny: accés, rectificació, supressió, portabilitat.</p>
+    </div>
+    <div class="compare-cell" style="padding: 0.6rem 0.7rem;">
+      <span class="compare-tag" style="font-size: 0.55rem;">ISO 27001</span>
+      <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.35;">Encaix amb controls A.5–A.18.</p>
+    </div>
+    <div class="compare-cell" style="padding: 0.6rem 0.7rem;">
+      <span class="compare-tag" style="font-size: 0.55rem;">NIS2</span>
+      <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.35;">Traçabilitat completa d'accions amb agents.</p>
+    </div>
+  </div>
+</div>
+
+<div class="text-sm">
+
+| Capa            | Mesura concreta                                                              |
+| --------------- | ---------------------------------------------------------------------------- |
+| **Identitat**   | SSO corporatiu (SAML/OIDC), MFA obligatori, RBAC granular per projecte.      |
+| **Dispositius** | Només PWA des de dispositius gestionats (MDM); device fingerprinting.        |
+| **Xarxa**       | Túnel xifrat empresarial; port forwarding sense exposar serveis a internet.  |
+| **Aplicacions** | Microsegmentació per equip; agents amb permisos mínims via MCP allowlist.    |
+| **Dades**       | Codi mai surt del Fog; scrubbing PII en prompts; auditoria completa de logs. |
+
+</div>
+
+</div>
+
+---
+
+<div class="slide-tag"><span class="accent-dot"></span>Riscos</div>
+<div class="page-number">10 / 19</div>
+
+<div class="h-full flex flex-col" style="gap: 1.75rem; justify-content: center;">
+
+<div>
+  <span class="eyebrow">Anàlisi de riscos</span>
+  <h2>Què pot anar malament<br>i com es mitiga.</h2>
+</div>
+
+<div class="text-sm">
+
+| Risc                             | Probabilitat | Impacte | Mitigació                                                         |
+| -------------------------------- | ------------ | ------- | ----------------------------------------------------------------- |
+| **Fuga de codi propietari**      | Alta         | Crític  | Self-host al Fog, scrubbing PII, allowlist d'MCP servers          |
+| **Allucinacions de l'agent**     | Mitjana      | Mitjà   | Revisió humana obligatòria, tests automàtics, traçabilitat        |
+| **Cost API descontrolat**        | Alta         | Mitjà   | Quotes per equip, alertes de pressupost, multi-provider barat     |
+| **Vendor lock-in**               | Mitjana      | Alt     | Capa d'abstracció multi-provider; canvi de model sense reescriure |
+| **Resistència cultural**         | Alta         | Alt     | Formació, casos pilot, dev advocates, mètriques visibles          |
+| **Compliance gap (RGPD / NIS2)** | Mitjana      | Crític  | Auditoria contínua, certificacions, procés ISO 27001              |
+
+</div>
+
+<p style="font-size: 0.8rem; color: var(--text-muted); max-width: 70ch;">
+La majoria dels riscos no són exclusius de la ialització — són els mateixos de qualsevol adopció tecnològica. La diferència és que <strong>amb una arquitectura adequada es controlen des del primer dia</strong>.
+</p>
+
+</div>
+
+---
+
+<div class="slide-tag"><span class="accent-dot"></span>KPIs</div>
+<div class="page-number">11 / 19</div>
+
+<div class="h-full flex flex-col" style="gap: 1.75rem; justify-content: center;">
+
+<div>
+  <span class="eyebrow">Què mesurar</span>
+  <h2>Els objectius d'una<br>empresa <em style="color:var(--accent);font-style:italic;">ialitzada</em>.</h2>
+</div>
+
+<div class="text-sm">
+
+| Objectiu estratègic                | KPI concret                          | Meta any 1   |
+| ---------------------------------- | ------------------------------------ | ------------ |
+| **Acceleració de delivery**        | % tasques amb assistència d'agent    | > 50%        |
+| **Reducció de càrrega repetitiva** | Hores estalviades / dev / setmana    | 8 – 12 h     |
+| **Onboarding més ràpid**           | Temps fins productivitat de nou dev  | de 5 d a 1 d |
+| **Cost API sota control**          | Cost per dev / mes                   | < 100 €      |
+| **Cobertura de compliance**        | % codi auditat per agents amb logs   | 100 %        |
+| **Adopció interna**                | % devs amb sessions actives mensuals | > 80 %       |
+
+</div>
+
+<p style="font-size: 0.8rem; color: var(--text-muted); max-width: 70ch;">
+Cap d'aquests indicadors és teòric. Tots es poden mesurar des de la primera setmana amb la capa d'observabilitat de ClaudeDeck.
+</p>
+
+</div>
+
+---
+
 <div class="slide-tag"><span class="accent-dot"></span>Aplicabilitat</div>
-<div class="page-number">07 / 12</div>
+<div class="page-number">12 / 19</div>
 
 <div class="h-full flex flex-col">
 
@@ -337,7 +531,7 @@ La ialització no demana canviar de sector ni de model de negoci. Demana incorpo
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>Models d'adopció</div>
-<div class="page-number">08 / 12</div>
+<div class="page-number">13 / 19</div>
 
 <div class="h-full flex flex-col">
 
@@ -388,8 +582,63 @@ La ialització no demana canviar de sector ni de model de negoci. Demana incorpo
 
 ---
 
+<div class="slide-tag"><span class="accent-dot"></span>Pressupost</div>
+<div class="page-number">14 / 19</div>
+
+<div class="h-full flex flex-col" style="gap: 1.75rem; justify-content: center;">
+
+<div>
+  <span class="eyebrow">Què costa ialitzar-se</span>
+  <h2>Inversió orientativa<br>per mida d'empresa.</h2>
+</div>
+
+<div class="cols-3">
+
+<div class="card-elevated">
+  <span class="tier-audience">Equip petit · 10 devs</span>
+  <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; margin: 0.5rem 0;">15 – 25k€<small style="font-family: var(--font-body); font-size: 0.75rem; color: var(--text-muted);"> / any</small></h3>
+  <ul style="list-style: none; padding: 0; margin: 0.75rem 0 0; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;">
+    <li>· API consum: ~6 – 12 k€</li>
+    <li>· ClaudeDeck Personal x10: ~2 k€</li>
+    <li>· Infra self-host: ~1 k€</li>
+    <li>· Formació + onboarding: 5 – 10 k€</li>
+  </ul>
+</div>
+
+<div class="card-elevated">
+  <span class="tier-audience">Equip mitjà · 50 devs</span>
+  <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; margin: 0.5rem 0;">80 – 150k€<small style="font-family: var(--font-body); font-size: 0.75rem; color: var(--text-muted);"> / any</small></h3>
+  <ul style="list-style: none; padding: 0; margin: 0.75rem 0 0; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;">
+    <li>· API consum: ~40 – 80 k€</li>
+    <li>· ClaudeDeck Team: ~30 k€</li>
+    <li>· Infra empresarial: ~5 k€</li>
+    <li>· Formació + dev advocates: 15 – 30 k€</li>
+  </ul>
+</div>
+
+<div class="card-elevated" style="border-color: var(--accent);">
+  <span class="tier-audience" style="color: var(--accent);">Empresa · 200+ devs</span>
+  <h3 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; margin: 0.5rem 0;">350k€ – 1M€<small style="font-family: var(--font-body); font-size: 0.75rem; color: var(--text-muted);"> / any</small></h3>
+  <ul style="list-style: none; padding: 0; margin: 0.75rem 0 0; font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;">
+    <li>· API consum: ~200 – 600 k€</li>
+    <li>· ClaudeDeck Enterprise: contracte</li>
+    <li>· Infra + DR + compliance: ~50 k€</li>
+    <li>· Formació corporativa: 50 – 100 k€</li>
+  </ul>
+</div>
+
+</div>
+
+<p style="font-size: 0.8rem; color: var(--text-muted); max-width: 70ch;">
+Estimacions a partir de costos típics de mercat (Anthropic / OpenAI / Gemini, llicències empresarials i formació). El payback típic és de <strong>6 a 9 mesos</strong> via productivitat recuperada.
+</p>
+
+</div>
+
+---
+
 <div class="slide-tag"><span class="accent-dot"></span>Beneficis</div>
-<div class="page-number">09 / 12</div>
+<div class="page-number">15 / 19</div>
 
 <div class="h-full flex flex-col" style="gap: 2rem; justify-content: center;">
 
@@ -435,8 +684,49 @@ La ialització no demana canviar de sector ni de model de negoci. Demana incorpo
 
 ---
 
+<div class="slide-tag"><span class="accent-dot"></span>Equips</div>
+<div class="page-number">16 / 19</div>
+
+<div class="h-full flex flex-col" style="gap: 1.75rem; justify-content: center;">
+
+<div>
+  <span class="eyebrow">L'humà a l'era ialitzada</span>
+  <h2>Què canvia<br>per als equips.</h2>
+</div>
+
+<div class="text-sm">
+
+| Rol                 | Era digital (avui)                       | Era ialitzada                                  |
+| ------------------- | ---------------------------------------- | ---------------------------------------------- |
+| **Dev junior**      | Escriu codi mecànic i resol bugs simples | Revisa i valida agents; aprèn més de pressa    |
+| **Dev sènior**      | Mentor + arquitecte d'una part del codi  | Orquestrador d'equips d'agents                 |
+| **Tech lead**       | Coordinador d'equip humà                 | Dissenyador d'estratègia agent-driven          |
+| **Product manager** | Especifica per a humans que executaran   | Defineix què poden fer els agents directament  |
+| **Rols nous**       | —                                        | Agent ops · Prompt engineer · Compliance audit |
+
+</div>
+
+<div class="cols-3" style="gap: 0.75rem;">
+  <div class="compare-cell">
+    <span class="compare-tag">Formació</span>
+    <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">Programa intern d'<strong>agent literacy</strong> obligatori per a tots els rols tècnics.</p>
+  </div>
+  <div class="compare-cell">
+    <span class="compare-tag">Cultura</span>
+    <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">Acceptar que la <strong>velocitat creativa</strong> es premia per damunt del codi escrit a mà.</p>
+  </div>
+  <div class="compare-cell">
+    <span class="compare-tag">Carrera</span>
+    <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">Dos camins: especialista en domini tècnic vs orquestrador d'agents.</p>
+  </div>
+</div>
+
+</div>
+
+---
+
 <div class="slide-tag"><span class="accent-dot"></span>Comunitat</div>
-<div class="page-number">10 / 12</div>
+<div class="page-number">17 / 19</div>
 
 <div class="split-2 h-full">
 
@@ -499,7 +789,7 @@ La ialització no demana canviar de sector ni de model de negoci. Demana incorpo
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>Visió</div>
-<div class="page-number">11 / 12</div>
+<div class="page-number">18 / 19</div>
 
 <div class="split-asymmetric h-full">
 
@@ -562,7 +852,7 @@ La ialització no demana canviar de sector ni de model de negoci. Demana incorpo
 ---
 
 <div class="slide-tag"><span class="accent-dot"></span>Conclusió</div>
-<div class="page-number">12 / 12</div>
+<div class="page-number">19 / 19</div>
 
 <div class="h-full grid" style="grid-template-rows: 1fr auto auto;">
 
