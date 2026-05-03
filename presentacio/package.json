@@ -1,0 +1,18 @@
+{
+  "name": "claudedeck-presentacio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Presentació de defensa de ClaudeDeck (Slidev)",
+  "scripts": {
+    "dev": "slidev --open",
+    "build": "slidev build",
+    "export": "slidev export --format pdf --dark false --output slides-export.pdf",
+    "export-png": "slidev export --format png --dark false"
+  },
+  "dependencies": {
+    "@slidev/cli": "^0.49.0",
+    "@slidev/theme-seriph": "^0.25.0",
+    "playwright-chromium": "^1.45.0",
+    "vue": "^3.4.0"
+  }
+}

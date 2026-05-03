@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <pattern id="diag3" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
+      <rect width="20" height="20" fill="#f8fafc"/>
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#e2e8f0" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="500" fill="url(#diag3)" stroke="#94a3b8" stroke-width="3" stroke-dasharray="10,6" rx="16"/>
+  <rect x="280" y="200" width="240" height="40" fill="#1e40af" rx="6"/>
+  <text x="400" y="227" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">CAPTURA 03</text>
+  <text x="400" y="280" font-family="Inter, sans-serif" font-size="20" font-weight="600" fill="#1e293b" text-anchor="middle">PWA mòbil</text>
+  <text x="400" y="310" font-family="Inter, sans-serif" font-size="15" fill="#475569" text-anchor="middle">Mateixa sessió accessible des de qualsevol dispositiu</text>
+  <text x="400" y="345" font-family="Inter, sans-serif" font-size="12" fill="#94a3b8" text-anchor="middle">Substituir per /screenshots/03-pwa-mobile.png</text>
+</svg>
