@@ -195,45 +195,83 @@ themeConfig:
   <span class="tag">Captures de producte</span>
 </div>
 
-<div class="grid grid-cols-2 gap-5 flex-1">
+<div class="shots-grid flex-1">
 
-<div class="placeholder">
-  <div>
-    <span class="placeholder-label">Captura 01</span>
-    <h3 class="placeholder-title">Dashboard d'agents</h3>
-    <p class="placeholder-desc">Vista general de projectes amb agents actius, tokens i estat de cada execució.</p>
-  </div>
-  <span class="tag" style="align-self:flex-end;">/dashboard</span>
+<div class="shot shot-pwa">
+  <img src="/images/pwa.jpeg" alt="PWA mòbil mateixa sessió" />
+  <span class="shot-label"><strong>03</strong> · PWA mòbil · mateixa sessió</span>
 </div>
 
-<div class="placeholder">
-  <div>
-    <span class="placeholder-label">Captura 02</span>
-    <h3 class="placeholder-title">Conductor — orquestració</h3>
-    <p class="placeholder-desc">Múltiples agents treballant en paral·lel sobre un mateix projecte, coordinats per l'humà.</p>
-  </div>
-  <span class="tag" style="align-self:flex-end;">/conductor</span>
+<div class="shot shot-multi">
+  <img src="/images/multi-pane.png" alt="Vista principal multi-pane" />
+  <span class="shot-label"><strong>01</strong> · Vista principal · multi-pane</span>
 </div>
 
-<div class="placeholder">
-  <div>
-    <span class="placeholder-label">Captura 03</span>
-    <h3 class="placeholder-title">PWA mòbil</h3>
-    <p class="placeholder-desc">Continua dirigint els agents des de qualsevol dispositiu, sense perdre el context de la sessió.</p>
-  </div>
-  <span class="tag" style="align-self:flex-end;">/mobile</span>
+<div class="shot shot-cond">
+  <img src="/images/conductor.png" alt="Conductor orquestració" />
+  <span class="shot-label"><strong>02</strong> · Conductor · orquestració</span>
 </div>
 
-<div class="placeholder">
-  <div>
-    <span class="placeholder-label">Captura 04</span>
-    <h3 class="placeholder-title">Observabilitat</h3>
-    <p class="placeholder-desc">Mètriques d'activitat, costos i productivitat agregada de tot l'equip d'agents per projecte.</p>
-  </div>
-  <span class="tag" style="align-self:flex-end;">/insights</span>
+<div class="shot shot-git">
+  <img src="/images/git-changes.png" alt="Git canvis de l'agent" />
+  <span class="shot-label"><strong>04</strong> · Git · canvis de l'agent</span>
 </div>
 
 </div>
+
+<style>
+.shots-grid {
+  display: grid;
+  grid-template-columns: 0.75fr 1.4fr 1.4fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas:
+    "pwa multi cond"
+    "pwa git   git";
+  gap: 0.65rem;
+  min-height: 0;
+}
+.shot-pwa  { grid-area: pwa; }
+.shot-multi { grid-area: multi; }
+.shot-cond { grid-area: cond; }
+.shot-git  { grid-area: git; }
+
+.shot {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+}
+.shot img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+.shot-label {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.shot-label strong { color: var(--accent); font-weight: 600; }
+</style>
 
 </div>
 
