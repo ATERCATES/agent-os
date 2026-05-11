@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <pattern id="diag1" patternUnits="userSpaceOnUse" width="20" height="20" patternTransform="rotate(45)">
+      <rect width="20" height="20" fill="#14141a"/>
+      <line x1="0" y1="0" x2="0" y2="20" stroke="#2a2a36" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="500" fill="url(#diag1)" stroke="#ff6b35" stroke-width="2" stroke-dasharray="10,6" rx="16"/>
+  <rect x="280" y="200" width="240" height="40" fill="#ff6b35" rx="6"/>
+  <text x="400" y="227" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" fill="#0a0a0c" text-anchor="middle" letter-spacing="2">CAPTURA 01</text>
+  <text x="400" y="280" font-family="'Fraunces', serif" font-size="22" font-weight="500" fill="#f5efe4" text-anchor="middle">Vista principal · multi-pane</text>
+  <text x="400" y="310" font-family="'Manrope', sans-serif" font-size="14" fill="#9a96a8" text-anchor="middle">Sidebar amb sessions + panes en paral·lel amb agents actius</text>
+  <text x="400" y="345" font-family="'JetBrains Mono', monospace" font-size="11" fill="#5e5b6e" text-anchor="middle">src/components/views/DesktopView.tsx</text>
+</svg>
