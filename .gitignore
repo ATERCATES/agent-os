@@ -66,3 +66,6 @@ progress.md
 !public/icons/*.png
 .playwright-mcp/
 .mcp.json
+
+# Local scratch
+claude-code-source/

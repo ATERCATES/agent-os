@@ -90,15 +90,36 @@ app.prepare().then(async () => {
     ws.on("close", () => clearInterval(interval));
   }
 
-  // --- Persistent PTY pool ---
-  // PTYs survive WebSocket disconnects. Clients attach/reattach by ptyId.
   interface PtyEntry {
     process: pty.IPty;
     ws: WebSocket | null;
     buffer: string[];
+    idleTimer: NodeJS.Timeout | null;
   }
   const ptyPool = new Map<string, PtyEntry>();
   const MAX_SCROLLBACK_BUFFER = 50000;
+  const PTY_IDLE_TIMEOUT_MS = parseInt(
+    process.env.CLAUDE_DECK_PTY_IDLE_TIMEOUT_MS || "300000",
+    10
+  );
+
+  function scheduleEviction(id: string, entry: PtyEntry) {
+    cancelEviction(entry);
+    entry.idleTimer = setTimeout(() => {
+      entry.idleTimer = null;
+      try {
+        entry.process.kill();
+      } catch {}
+      ptyPool.delete(id);
+    }, PTY_IDLE_TIMEOUT_MS);
+  }
+
+  function cancelEviction(entry: PtyEntry) {
+    if (entry.idleTimer) {
+      clearTimeout(entry.idleTimer);
+      entry.idleTimer = null;
+    }
+  }
 
   function spawnPty(): { id: string; entry: PtyEntry } {
     const shell = process.env.SHELL || "/bin/zsh";
@@ -121,7 +142,12 @@ app.prepare().then(async () => {
     });
 
     const id = `pty_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-    const entry: PtyEntry = { process: proc, ws: null, buffer: [] };
+    const entry: PtyEntry = {
+      process: proc,
+      ws: null,
+      buffer: [],
+      idleTimer: null,
+    };
 
     proc.onData((data: string) => {
       entry.buffer.push(data);
@@ -137,6 +163,7 @@ app.prepare().then(async () => {
       if (entry.ws?.readyState === WebSocket.OPEN) {
         entry.ws.send(JSON.stringify({ type: "exit", code: exitCode }));
       }
+      cancelEviction(entry);
       ptyPool.delete(id);
     });
 
@@ -144,7 +171,7 @@ app.prepare().then(async () => {
     return { id, entry };
   }
 
-  function attachWsToPty(ws: WebSocket, entry: PtyEntry, _ptyId: string) {
+  function attachWsToPty(ws: WebSocket, entry: PtyEntry, id: string) {
     // Detach previous WebSocket if any
     if (entry.ws && entry.ws !== ws && entry.ws.readyState === WebSocket.OPEN) {
       entry.ws.onclose = null;
@@ -152,6 +179,7 @@ app.prepare().then(async () => {
       entry.ws.close(1000, "Replaced by new connection");
     }
     entry.ws = ws;
+    cancelEviction(entry);
 
     // Replay buffered output so the client sees prior terminal state
     if (entry.buffer.length > 0) {
@@ -178,12 +206,17 @@ app.prepare().then(async () => {
     });
 
     ws.on("close", () => {
-      if (entry.ws === ws) entry.ws = null;
-      // PTY stays alive — no kill
+      if (entry.ws === ws) {
+        entry.ws = null;
+        scheduleEviction(id, entry);
+      }
     });
 
     ws.on("error", () => {
-      if (entry.ws === ws) entry.ws = null;
+      if (entry.ws === ws) {
+        entry.ws = null;
+        scheduleEviction(id, entry);
+      }
     });
   }
 
@@ -225,6 +258,13 @@ app.prepare().then(async () => {
 
   const shutdown = () => {
     stopAllTunnels();
+    for (const entry of ptyPool.values()) {
+      cancelEviction(entry);
+      try {
+        entry.process.kill();
+      } catch {}
+    }
+    ptyPool.clear();
     process.exit(0);
   };
   process.on("SIGINT", shutdown);
