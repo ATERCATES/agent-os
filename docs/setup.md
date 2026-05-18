@@ -39,11 +39,15 @@ Without `mouse on`, terminal scroll will not work. The setup script creates this
 
 ## Environment Variables
 
-| Variable   | Default                  | Description                         |
-| ---------- | ------------------------ | ----------------------------------- |
-| `PORT`     | `3011`                   | Server port                         |
-| `DB_PATH`  | `~/.claude-deck/data.db` | SQLite database path                |
-| `NODE_ENV` | `development`            | Set to `production` for prod builds |
+| Variable              | Default                              | Description                                                                     |
+| --------------------- | ------------------------------------ | ------------------------------------------------------------------------------- |
+| `PORT`                | `3011`                               | Server port                                                                     |
+| `HOST`                | `localhost` (dev) / `0.0.0.0` (prod) | Bind address                                                                    |
+| `DB_PATH`             | `~/.claude-deck/data.db`             | SQLite database path                                                            |
+| `NODE_ENV`            | `development`                        | Set to `production` for prod builds                                             |
+| `TLS_CERT`            | _(none)_                             | Path to TLS cert (e.g. `fullchain.pem`). When set with `TLS_KEY`, enables HTTPS |
+| `TLS_KEY`             | _(none)_                             | Path to TLS private key                                                         |
+| `ALLOWED_DEV_ORIGINS` | _(none)_                             | Comma-separated extra origins for Next dev (e.g. `home.pastor.bz,foo.lan`)      |
 
 ## Docker
 

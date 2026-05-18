@@ -1,4 +1,6 @@
-import { createServer } from "http";
+import { createServer as createHttpServer } from "http";
+import { createServer as createHttpsServer } from "https";
+import { readFileSync, existsSync } from "fs";
 import { parse } from "url";
 import next from "next";
 import { WebSocketServer, WebSocket } from "ws";
@@ -27,7 +29,10 @@ const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(async () => {
-  const server = createServer(async (req, res) => {
+  const requestHandler = async (
+    req: import("http").IncomingMessage,
+    res: import("http").ServerResponse
+  ) => {
     try {
       const parsedUrl = parse(req.url!, true);
       await handle(req, res, parsedUrl);
@@ -36,7 +41,28 @@ app.prepare().then(async () => {
       res.statusCode = 500;
       res.end("internal server error");
     }
-  });
+  };
+
+  const expandHome = (p: string) => p.replace(/^~/, process.env.HOME || "");
+  const tlsCert = process.env.TLS_CERT
+    ? expandHome(process.env.TLS_CERT)
+    : undefined;
+  const tlsKey = process.env.TLS_KEY
+    ? expandHome(process.env.TLS_KEY)
+    : undefined;
+  const useHttps = !!(
+    tlsCert &&
+    tlsKey &&
+    existsSync(tlsCert) &&
+    existsSync(tlsKey)
+  );
+
+  const server = useHttps
+    ? createHttpsServer(
+        { cert: readFileSync(tlsCert!), key: readFileSync(tlsKey!) },
+        requestHandler
+      )
+    : createHttpServer(requestHandler);
 
   const terminalWss = new WebSocketServer({ noServer: true });
   const updatesWss = new WebSocketServer({ noServer: true });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateSession, hasUsers, COOKIE_NAME } from "@/lib/auth";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -19,31 +20,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const sessionCookie = request.cookies.get("claude_deck_session");
-
-  const internalBase = `http://localhost:${process.env.PORT || 3011}`;
-
-  if (!sessionCookie?.value) {
-    const setupCheck = await fetch(`${internalBase}/api/auth/session`, {
-      headers: { cookie: "" },
-    });
-    const data = await setupCheck.json();
-
-    if (data.needsSetup) {
-      return NextResponse.redirect(new URL("/setup", request.url));
-    }
-
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (!hasUsers()) {
+    return NextResponse.redirect(new URL("/setup", request.url));
   }
 
-  const sessionCheck = await fetch(`${internalBase}/api/auth/session`, {
-    headers: { cookie: `claude_deck_session=${sessionCookie.value}` },
-  });
+  const sessionCookie = request.cookies.get(COOKIE_NAME);
+  const user = sessionCookie?.value
+    ? validateSession(sessionCookie.value)
+    : null;
 
-  if (!sessionCheck.ok) {
+  if (!user) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

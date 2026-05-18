@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 import { resolve } from "path";
 
+const allowedDevOrigins = (process.env.ALLOWED_DEV_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.138"],
+  ...(allowedDevOrigins.length > 0 && { allowedDevOrigins }),
   devIndicators: false,
   typescript: {
     ignoreBuildErrors: true,
